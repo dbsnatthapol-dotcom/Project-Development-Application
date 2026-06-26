@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UAM Dashboard — Test Report</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#F0F4F8;color:#1a2233;font-size:14px}
+header{background:#0B2545;color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}
+header h1{font-size:17px;font-weight:700;letter-spacing:.02em}
+header span{font-size:12px;opacity:.6}
+.wrap{max-width:860px;margin:0 auto;padding:24px 20px 48px}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.sum-card{background:#fff;border-radius:12px;padding:16px;border:1px solid #E3E8EE;box-shadow:0 1px 3px rgba(0,0,0,.06);text-align:center}
+.sum-card .num{font-size:32px;font-weight:800;line-height:1}
+.sum-card .lab{font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+.sum-card.pass .num{color:#16a34a}
+.sum-card.fail .num{color:#dc2626}
+.sum-card.warn .num{color:#d97706}
+.sum-card.total .num{color:#0B2545}
+.group{background:#fff;border:1px solid #E3E8EE;border-radius:12px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.group-head{padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E3E8EE;display:flex;align-items:center;justify-content:space-between}
+.group-head h2{font-size:13px;font-weight:700;color:#0B2545;text-transform:uppercase;letter-spacing:.04em}
+.group-head .gc{font-size:12px;font-weight:600;color:#64748B}
+.row{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid #F1F4F8}
+.row:last-child{border-bottom:none}
+.row:hover{background:#FAFBFD}
+.badge{flex-shrink:0;font-size:10.5px;font-weight:700;border-radius:6px;padding:3px 9px;min-width:52px;text-align:center}
+.badge.pass{background:#dcfce7;color:#16a34a}
+.badge.fail{background:#fee2e2;color:#dc2626}
+.badge.warn{background:#fef3c7;color:#d97706}
+.badge.skip{background:#F1F5F9;color:#64748B}
+.row-label{flex:1;font-size:13px}
+.row-detail{font-size:11px;color:#64748B;margin-left:auto;max-width:280px;text-align:right;word-break:break-all}
+.progress-bar{height:6px;background:#E3E8EE;border-radius:6px;margin-bottom:20px;overflow:hidden}
+.progress-bar>span{display:block;height:100%;border-radius:6px;background:#16a34a;transition:width .5s}
+.log{background:#1a2233;color:#e2e8f0;border-radius:10px;padding:16px;font-family:'Courier New',monospace;font-size:12px;line-height:1.7;margin-top:24px;max-height:320px;overflow-y:auto}
+.log .ok{color:#4ade80}
+.log .er{color:#f87171}
+.log .wn{color:#fbbf24}
+.log .in{color:#94a3b8}
+.run-btn{display:inline-flex;align-items:center;gap:7px;background:#0B2545;color:#fff;border:none;border-radius:9px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:20px;transition:.15s}
+.run-btn:hover{background:#13315C}
+.run-btn:disabled{opacity:.5;cursor:not-allowed}
+.ts{font-size:11px;color:#94A3B8;margin-top:12px;text-align:right}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧪 UAM Dashboard Platform — Test Report</h1>
+  <span id="ts"></span>
+</header>
+
+<div class="wrap">
+  <button class="run-btn" id="runBtn" onclick="runAll()">▶ เริ่มทดสอบ</button>
+
+  <div class="summary" id="summary">
+    <div class="sum-card total"><div class="num" id="sTotal">—</div><div class="lab">ทดสอบทั้งหมด</div></div>
+    <div class="sum-card pass"><div class="num" id="sPass">—</div><div class="lab">ผ่าน</div></div>
+    <div class="sum-card fail"><div class="num" id="sFail">—</div><div class="lab">ล้มเหลว</div></div>
+    <div class="sum-card warn"><div class="num" id="sWarn">—</div><div class="lab">เตือน</div></div>
+  </div>
+  <div class="progress-bar"><span id="progressBar" style="width:0"></span></div>
+
+  <div id="groups"></div>
+  <div class="log" id="log"><span class="in">กด "เริ่มทดสอบ" เพื่อรัน...</span></div>
+  <div class="ts" id="tsFooter"></div>
+</div>
+
+<script>
+// ==============================
+// TEST DEFINITIONS
+// ==============================
+
+const REQUIRED_IDS = [
+  'sidebar','viewCockpit','viewTimeline','viewTable','viewActions','viewDaily',
+  'viewIssues','viewRisks','viewDocs','viewTeam','viewSignoff','viewTraining',
+  'actBadge','issueBadge','content','kpis','machines','addMachine',
+  'filterCat','filterBox','legend','langSw','saveText','saveBadge',
+  'btnHelp','btnReport','btnExport','btnImport','importFile',
+  'f-title','f-maker','f-customer','f-site','f-issuedBy','f-issuedDate',
+  'f-approved','f-checked','f-issued2',
+  'projBanner','footnote','lightbox','reportModal','repClose','repMods',
+  'helpModal','helpClose','printRoot',
+  'sidebarToggle','topbarModuleTitle','projSelector','projSelName',
+  'projManagerModal','projList','metaPanel','metaToggleBar'
+];
+
+const REQUIRED_FUNCTIONS = [
+  'openProjManager','closeProjManager','saveAsProject','loadProject',
+  'deleteProject','newProject','renderProjSelector','renderProjList',
+  'toggleMetaPanel','toggleCloseProject'
+];
+
+const REQUIRED_STRINGS = [
+  { label:'STORAGE_KEY ถูกต้อง', str:'uam-testing-machine-plan-html-v1' },
+  { label:'Multi-project key ถูกต้อง', str:'uam-platform-projects-v1' },
+  { label:'มี base64 logo', str:'data:image/png;base64,' },
+  { label:'มี data-i18n attributes', str:'data-i18n=' },
+  { label:'มี localStorage.setItem', str:'localStorage.setItem' },
+  { label:'มี localStorage.getItem', str:'localStorage.getItem' },
+  { label:'มี iframe print (printRoot)', str:'printRoot' },
+  { label:'มี exportJSON / export function', str:'btnExport' },
+  { label:'มีฟอนต์ Sarabun (ภาษาไทย)', str:'Sarabun' },
+  { label:'มี i18n fallback ไทย', str:'uam-lang' },
+  { label:'Sidebar mini CSS', str:'sidebar-mini' },
+  { label:'Mobile responsive breakpoint', str:'mobile-open' },
+  { label:'Meta panel collapse CSS', str:'.meta-panel.collapsed' },
+  { label:'DOCTYPE ถูกต้อง', str:'<!DOCTYPE html>' },
+  { label:'script tag ปิดถูกต้อง', str:'</script>' },
+];
+
+const REQUIRED_NAV_ICONS = [
+  { id:'viewCockpit', label:'Cockpit icon' },
+  { id:'viewTimeline', label:'Timeline icon' },
+  { id:'viewTable', label:'Table icon' },
+  { id:'viewActions', label:'Actions icon' },
+  { id:'viewDaily', label:'Daily icon' },
+  { id:'viewIssues', label:'Issues icon' },
+  { id:'viewRisks', label:'Risks icon' },
+  { id:'viewDocs', label:'Docs icon' },
+  { id:'viewTeam', label:'Team icon' },
+  { id:'viewSignoff', label:'Signoff icon' },
+  { id:'viewTraining', label:'Training icon' },
+];
+
+const I18N_KEYS = [
+  'tab.cockpit','tab.timeline','tab.table','tab.actions','tab.daily',
+  'tab.issues','tab.risks','tab.docs','tab.team','tab.signoff','tab.training',
+  'btn.report','btn.export','btn.import','btn.help'
+];
+
+// ==============================
+// RUNNER
+// ==============================
+
+var results = [];
+var htmlContent = '';
+var iframe = null;
+var iframeDoc = null;
+
+async function runAll() {
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังทดสอบ...';
+  results = [];
+  log('in','=== UAM Dashboard Test Suite ===');
+  log('in', new Date().toLocaleString('th-TH'));
+
+  // Load index.html
+  try {
+    const resp = await fetch('index.html');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    htmlContent = await resp.text();
+    log('ok', 'โหลด index.html สำเร็จ — ' + Math.round(htmlContent.length/1024) + ' KB');
+  } catch(e) {
+    log('er', 'โหลด index.html ล้มเหลว: ' + e.message);
+    log('in', 'หมายเหตุ: ต้องรันผ่าน HTTP server (ไม่ใช่ file://)');
+    addResult('โครงสร้างไฟล์', 'โหลด index.html', 'fail', e.message);
+    finish(btn);
+    return;
+  }
+
+  // Load iframe to test live DOM
+  await loadIframe();
+
+  // Run test groups
+  testFileStructure();
+  testRequiredIDs();
+  testNavIcons();
+  testJSFunctions();
+  testStringPresence();
+  testI18nKeys();
+  testSidebarBehavior();
+  testProjectManager();
+  testModalElements();
+
+  render();
+  finish(btn);
+}
+
+function loadIframe() {
+  return new Promise((resolve) => {
+    if (iframe) document.body.removeChild(iframe);
+    iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:1280px;height:900px;border:none;visibility:hidden';
+    iframe.src = 'index.html';
+    iframe.onload = () => {
+      try { iframeDoc = iframe.contentDocument || iframe.contentWindow.document; } catch(e){}
+      resolve();
+    };
+    iframe.onerror = () => resolve();
+    document.body.appendChild(iframe);
+    setTimeout(resolve, 3000); // timeout
+  });
+}
+
+function addResult(group, label, status, detail='') {
+  results.push({ group, label, status, detail });
+}
+
+// --- TEST GROUPS ---
+
+function testFileStructure() {
+  const g = 'โครงสร้างไฟล์ (index.html)';
+  const opens = (htmlContent.match(/<script[^>]*>/g) || []).length;
+  const closes = (htmlContent.match(/<\/script>/g) || []).length;
+  addResult(g, 'Script tag สมดุล (open=close)', opens === closes ? 'pass' : 'fail',
+    `open:${opens}, close:${closes}`);
+  addResult(g, 'DOCTYPE html', htmlContent.trimStart().startsWith('<!DOCTYPE') ? 'pass' : 'fail');
+  addResult(g, 'ปิดด้วย </html>', htmlContent.trim().endsWith('</html>') ? 'pass' : 'fail');
+  addResult(g, 'ขนาดไฟล์ 150–400 KB', (htmlContent.length > 150000 && htmlContent.length < 400000) ? 'pass' : 'warn',
+    Math.round(htmlContent.length/1024) + ' KB');
+  addResult(g, 'ไม่มี LOGO_PLACEHOLDER หลงเหลือ', !htmlContent.includes('LOGO_PLACEHOLDER') ? 'pass' : 'fail');
+  addResult(g, 'มี base64 logo ฝังอยู่', htmlContent.includes('data:image/png;base64,') ? 'pass' : 'fail');
+  log('in','[โครงสร้างไฟล์] ตรวจสอบแล้ว');
+}
+
+function testRequiredIDs() {
+  const g = 'Element IDs (DOM)';
+  if (!iframeDoc) {
+    addResult(g, 'ไม่สามารถตรวจ DOM (iframe)','warn','iframe ไม่โหลดหรือ same-origin issue');
+    return;
+  }
+  let pass=0, fail=0;
+  REQUIRED_IDS.forEach(id => {
+    const el = iframeDoc.getElementById(id);
+    if (el) { pass++; log('ok','  #'+id); }
+    else { fail++; log('er','  MISSING: #'+id); addResult(g,'#'+id+' ไม่พบ','fail'); }
+  });
+  addResult(g, `IDs ครบ ${pass}/${REQUIRED_IDS.length}`, fail===0?'pass':fail<=3?'warn':'fail',
+    fail ? `ขาด ${fail} IDs` : 'ครบทุก ID');
+  log('in',`[Element IDs] pass:${pass} fail:${fail}`);
+}
+
+function testNavIcons() {
+  const g = 'Sidebar Navigation Icons';
+  if (!iframeDoc) { addResult(g,'ไม่สามารถตรวจ DOM','warn'); return; }
+  REQUIRED_NAV_ICONS.forEach(({id, label}) => {
+    const btn = iframeDoc.getElementById(id);
+    if (!btn) { addResult(g, label, 'fail', `#${id} ไม่พบ`); return; }
+    const svg = btn.querySelector('svg');
+    const navIcon = btn.querySelector('.nav-icon');
+    const navLabel = btn.querySelector('.nav-label');
+    addResult(g, label, (svg && navLabel) ? 'pass' : 'warn',
+      !svg ? 'ไม่มี SVG icon' : !navLabel ? 'ไม่มี nav-label' : '');
+  });
+  log('in','[Nav Icons] ตรวจสอบ '+REQUIRED_NAV_ICONS.length+' icons');
+}
+
+function testJSFunctions() {
+  const g = 'JavaScript Functions';
+  let pass=0, fail=0;
+  REQUIRED_FUNCTIONS.forEach(fn => {
+    // Check in HTML source
+    const inSrc = htmlContent.includes('function ' + fn) || htmlContent.includes(fn + ' =') || htmlContent.includes(fn + '=function');
+    // Check in iframe window if available
+    let inWin = false;
+    try { inWin = iframe && iframe.contentWindow && typeof iframe.contentWindow[fn] === 'function'; } catch(e){}
+    const ok = inSrc || inWin;
+    if (ok) { pass++; log('ok','  fn '+fn+'()'); }
+    else { fail++; log('er','  MISSING fn: '+fn+'()'); }
+    addResult(g, fn+'()', ok ? 'pass' : 'fail', inWin ? 'พบใน window' : inSrc ? 'พบใน source' : 'ไม่พบ');
+  });
+  log('in',`[JS Functions] pass:${pass} fail:${fail}`);
+}
+
+function testStringPresence() {
+  const g = 'ข้อความ / Keys ที่ต้องมี';
+  REQUIRED_STRINGS.forEach(({label, str}) => {
+    const found = htmlContent.includes(str);
+    addResult(g, label, found ? 'pass' : 'fail', found ? '' : `"${str.slice(0,40)}" ไม่พบ`);
+    if (!found) log('er','  MISSING: '+label);
+  });
+  log('in','[String checks] '+REQUIRED_STRINGS.length+' items');
+}
+
+function testI18nKeys() {
+  const g = 'i18n data-i18n keys';
+  let pass=0, fail=0;
+  I18N_KEYS.forEach(key => {
+    const found = htmlContent.includes('data-i18n="'+key+'"');
+    if (found) pass++; else fail++;
+    if (!found) { addResult(g, 'data-i18n="'+key+'"', 'warn', 'ไม่พบ key'); log('wn','  MISSING i18n key: '+key); }
+  });
+  addResult(g, `i18n keys ครบ ${pass}/${I18N_KEYS.length}`, fail===0?'pass':fail<=3?'warn':'fail');
+  log('in',`[i18n keys] pass:${pass} warn:${fail}`);
+}
+
+function testSidebarBehavior() {
+  const g = 'Sidebar Behavior (CSS + DOM)';
+  const hasMiniClass = htmlContent.includes('sidebar.mini') || htmlContent.includes('.mini');
+  addResult(g, 'CSS class .mini ใช้ได้', hasMiniClass ? 'pass' : 'fail');
+  const hasSidebarToggle = htmlContent.includes('sidebarToggle');
+  addResult(g, 'sidebarToggle button มี', hasSidebarToggle ? 'pass' : 'fail');
+  const hasMobileOpen = htmlContent.includes('mobile-open');
+  addResult(g, 'Mobile sidebar (mobile-open)', hasMobileOpen ? 'pass' : 'fail');
+  const hasSidebarW = htmlContent.includes('--sidebar-w') || htmlContent.includes('sidebar-w');
+  addResult(g, 'CSS variable --sidebar-w', hasSidebarW ? 'pass' : 'fail');
+
+  if (iframeDoc) {
+    const sidebar = iframeDoc.getElementById('sidebar');
+    addResult(g, 'sidebar element อยู่ใน DOM', sidebar ? 'pass' : 'fail');
+    if (sidebar) {
+      const style = iframe.contentWindow.getComputedStyle(sidebar);
+      addResult(g, 'sidebar มี display:flex', style.display === 'flex' ? 'pass' : 'warn',
+        'computed display: '+style.display);
+    }
+    const navItems = iframeDoc.querySelectorAll('.nav-item');
+    addResult(g, 'nav-item buttons ครบ 11', navItems.length === 11 ? 'pass' : 'warn',
+      'พบ '+navItems.length+' items');
+    const activeItems = iframeDoc.querySelectorAll('.nav-item.on');
+    addResult(g, 'มี active nav-item (class .on)', activeItems.length === 1 ? 'pass' : 'warn',
+      'active items: '+activeItems.length);
+  }
+  log('in','[Sidebar] ตรวจสอบแล้ว');
+}
+
+function testProjectManager() {
+  const g = 'Multi-Project Manager';
+  addResult(g, 'projManagerModal modal มี', htmlContent.includes('projManagerModal') ? 'pass' : 'fail');
+  addResult(g, 'projList container มี', htmlContent.includes('projList') ? 'pass' : 'fail');
+  addResult(g, 'PROJ_KEY uam-platform-projects-v1', htmlContent.includes('uam-platform-projects-v1') ? 'pass' : 'fail');
+  addResult(g, 'PROJ_ACTIVE_KEY', htmlContent.includes('uam-platform-active-project') ? 'pass' : 'fail');
+  addResult(g, 'ปุ่ม "โปรเจกต์ใหม่"', htmlContent.includes('newProject()') ? 'pass' : 'fail');
+  addResult(g, 'ปุ่ม "บันทึกโปรเจกต์นี้"', htmlContent.includes('saveAsProject()') ? 'pass' : 'fail');
+  addResult(g, 'openProjManager เชื่อม projSelector', htmlContent.includes('openProjManager()') ? 'pass' : 'fail');
+
+  if (iframeDoc) {
+    const modal = iframeDoc.getElementById('projManagerModal');
+    addResult(g, 'projManagerModal อยู่ใน DOM', modal ? 'pass' : 'fail');
+    if (modal) {
+      addResult(g, 'modal ซ่อนอยู่ตอนเริ่ม', !modal.classList.contains('show') ? 'pass' : 'warn');
+    }
+    const sel = iframeDoc.getElementById('projSelector');
+    addResult(g, 'projSelector มี onclick', sel && sel.getAttribute('onclick') ? 'pass' : 'warn',
+      sel ? sel.getAttribute('onclick') : 'ไม่พบ');
+  }
+  log('in','[Project Manager] ตรวจสอบแล้ว');
+}
+
+function testModalElements() {
+  const g = 'Modals & Print';
+  const checks = [
+    ['reportModal', 'Report Modal'],
+    ['helpModal', 'Help Modal'],
+    ['lightbox', 'Lightbox'],
+    ['printRoot', 'Print Root (iframe)'],
+    ['repMods', 'Report Module checkboxes'],
+    ['repClose', 'Report close button'],
+    ['helpClose', 'Help close button'],
+  ];
+  if (iframeDoc) {
+    checks.forEach(([id, label]) => {
+      const el = iframeDoc.getElementById(id);
+      addResult(g, label+' (#'+id+')', el ? 'pass' : 'fail');
+    });
+    // Check report modal has 10 checkboxes (10 modules minus cockpit duplicate = all)
+    const repMods = iframeDoc.getElementById('repMods');
+    if (repMods) {
+      const cbs = repMods.querySelectorAll('input[type=checkbox]');
+      addResult(g, 'Report checkboxes ครบ (≥9)', cbs.length >= 9 ? 'pass' : 'warn', cbs.length+' checkboxes');
+    }
+  } else {
+    checks.forEach(([id, label]) => {
+      addResult(g, label, htmlContent.includes('id="'+id+'"') ? 'pass' : 'fail', 'ตรวจจาก source');
+    });
+  }
+  log('in','[Modals] ตรวจสอบแล้ว');
+}
+
+// ==============================
+// RENDER
+// ==============================
+
+function render() {
+  const groups = {};
+  results.forEach(r => {
+    if (!groups[r.group]) groups[r.group] = [];
+    groups[r.group].push(r);
+  });
+
+  let total=0, pass=0, fail=0, warn=0;
+  results.forEach(r => {
+    total++;
+    if (r.status==='pass') pass++;
+    else if (r.status==='fail') fail++;
+    else if (r.status==='warn') warn++;
+  });
+
+  document.getElementById('sTotal').textContent = total;
+  document.getElementById('sPass').textContent = pass;
+  document.getElementById('sFail').textContent = fail;
+  document.getElementById('sWarn').textContent = warn;
+  document.getElementById('progressBar').style.width = Math.round(pass/total*100)+'%';
+  if (fail > 0) document.getElementById('progressBar').style.background = '#dc2626';
+  else if (warn > 0) document.getElementById('progressBar').style.background = '#d97706';
+
+  const gEl = document.getElementById('groups');
+  gEl.innerHTML = '';
+  Object.entries(groups).forEach(([gName, rows]) => {
+    const gPass = rows.filter(r=>r.status==='pass').length;
+    const gFail = rows.filter(r=>r.status==='fail').length;
+    const gWarn = rows.filter(r=>r.status==='warn').length;
+    const div = document.createElement('div');
+    div.className = 'group';
+    div.innerHTML = `<div class="group-head"><h2>${gName}</h2><span class="gc">✅${gPass} ❌${gFail} ⚠️${gWarn}</span></div>` +
+      rows.map(r => `<div class="row">
+        <span class="badge ${r.status}">${r.status==='pass'?'PASS':r.status==='fail'?'FAIL':r.status==='warn'?'WARN':'SKIP'}</span>
+        <span class="row-label">${r.label}</span>
+        ${r.detail ? '<span class="row-detail">'+r.detail+'</span>' : ''}
+      </div>`).join('');
+    gEl.appendChild(div);
+  });
+
+  const now = new Date().toLocaleString('th-TH');
+  document.getElementById('ts').textContent = now;
+  document.getElementById('tsFooter').textContent = `ทดสอบเมื่อ: ${now} · pass ${pass}/${total}`;
+  log('in',`=== สรุป: PASS ${pass} / FAIL ${fail} / WARN ${warn} / TOTAL ${total} ===`);
+}
+
+function finish(btn) {
+  btn.disabled = false;
+  btn.textContent = '🔄 ทดสอบอีกครั้ง';
+}
+
+// Log
+function log(type, msg) {
+  const el = document.getElementById('log');
+  const line = document.createElement('div');
+  line.className = type;
+  line.textContent = (type==='ok'?'✓ ':type==='er'?'✗ ':type==='wn'?'⚠ ':'  ') + msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+document.getElementById('ts').textContent = new Date().toLocaleString('th-TH');
+</script>
+</body>
+</html>
