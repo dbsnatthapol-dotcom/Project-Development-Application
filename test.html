@@ -148,22 +148,38 @@ async function runAll() {
   log('in','=== UAM Dashboard Test Suite ===');
   log('in', new Date().toLocaleString('th-TH'));
 
-  // Load index.html
-  try {
-    const resp = await fetch('index.html');
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    htmlContent = await resp.text();
-    log('ok', 'โหลด index.html สำเร็จ — ' + Math.round(htmlContent.length/1024) + ' KB');
-  } catch(e) {
-    log('er', 'โหลด index.html ล้มเหลว: ' + e.message);
-    log('in', 'หมายเหตุ: ต้องรันผ่าน HTTP server (ไม่ใช่ file://)');
-    addResult('โครงสร้างไฟล์', 'โหลด index.html', 'fail', e.message);
-    finish(btn);
-    return;
+  // Load iframe first (works on file://)
+  await loadIframe();
+
+  // Extract HTML source from iframe (works on file:// same-directory)
+  if (iframeDoc) {
+    try {
+      htmlContent = '<!DOCTYPE html>\n' + iframeDoc.documentElement.outerHTML;
+      log('ok', 'อ่าน source จาก iframe สำเร็จ — ' + Math.round(htmlContent.length/1024) + ' KB');
+    } catch(e) {
+      log('wn', 'outerHTML fallback: ' + e.message);
+    }
   }
 
-  // Load iframe to test live DOM
-  await loadIframe();
+  // Try XHR as fallback (works on HTTP server and some file:// configs)
+  if (!htmlContent) {
+    try {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', 'index.html', false);
+      xhr.send();
+      if (xhr.status === 200 || xhr.status === 0) {
+        htmlContent = xhr.responseText;
+        log('ok', 'โหลด index.html ผ่าน XHR — ' + Math.round(htmlContent.length/1024) + ' KB');
+      }
+    } catch(e) {
+      log('wn', 'XHR ล้มเหลว (ปกติบน file://) — ใช้ DOM-only mode');
+    }
+  }
+
+  if (!htmlContent && !iframeDoc) {
+    addResult('โครงสร้างไฟล์', 'โหลด index.html', 'fail', 'เปิดผ่าน Chrome ด้วย --allow-file-access-from-files หรือรัน HTTP server');
+    finish(btn); return;
+  }
 
   // Run test groups
   testFileStructure();
