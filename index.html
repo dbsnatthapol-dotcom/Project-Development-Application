@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'none'; object-src 'none';" />
+<meta http-equiv="X-Content-Type-Options" content="nosniff" />
+<meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
 <title>PRIME — Project Management Platform | UAM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -631,9 +634,136 @@ td input[type=date]{font-family:'IBM Plex Mono',monospace;font-size:12px;width:1
   body{background:#fff}
   .card,.kpi{box-shadow:none!important;break-inside:avoid}
 }
+
+/* ══════════ PIN LOCK ══════════ */
+.pin-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(145deg,#060f1c 0%,#0B2545 55%,#0e3060 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .4s ease;gap:0;
+}
+.pin-card{
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:24px;padding:40px 36px;width:340px;text-align:center;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 32px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.05);
+}
+.pin-logo{width:52px;height:52px;object-fit:contain;margin-bottom:10px;border-radius:10px}
+.pin-app-name{font-family:'Archivo','Sarabun',sans-serif;font-size:20px;font-weight:800;color:#fff;letter-spacing:.04em}
+.pin-app-tagline{font-size:9.5px;color:rgba(255,255,255,.35);margin:4px 0 18px;line-height:1.5}
+.pin-mode-label{font-size:13px;color:rgba(255,255,255,.65);margin-bottom:20px;font-weight:500;min-height:18px}
+.pin-dots-row{display:flex;gap:14px;justify-content:center;margin-bottom:10px}
+.pin-dot{
+  width:13px;height:13px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.25);background:transparent;
+  transition:all .15s cubic-bezier(.34,1.56,.64,1);
+}
+.pin-dot.filled{background:#0E9BEF;border-color:#0E9BEF;box-shadow:0 0 12px rgba(14,155,239,.7);transform:scale(1.15)}
+.pin-error{
+  font-size:11.5px;color:#ff7070;min-height:18px;margin-bottom:12px;
+  opacity:0;transition:opacity .25s ease;font-weight:500;
+}
+.pin-numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:6px}
+.pin-key{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);
+  border-radius:14px;color:#fff;padding:14px 8px 11px;cursor:pointer;
+  transition:all .1s ease;display:flex;flex-direction:column;align-items:center;line-height:1;
+  user-select:none;-webkit-tap-highlight-color:transparent;
+}
+.pin-key:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.22);transform:translateY(-1px)}
+.pin-key:active{background:rgba(14,155,239,.3);border-color:#0E9BEF;transform:scale(.95)}
+.pin-key-num{font-size:19px;font-weight:600}
+.pin-key-sub{font-size:7.5px;color:rgba(255,255,255,.35);margin-top:3px;letter-spacing:.1em}
+.pin-key-del{font-size:18px;background:rgba(255,80,80,.1);border-color:rgba(255,80,80,.18)}
+.pin-key-del:hover{background:rgba(255,80,80,.22)}
+.pin-key-forgot{font-size:11px;color:rgba(255,255,255,.35);background:transparent;border:none;padding:10px 4px}
+.pin-key-forgot:hover{color:rgba(14,155,239,.85);text-decoration:underline}
+.pin-footer-note{margin-top:20px;font-size:10.5px;color:rgba(255,255,255,.2);letter-spacing:.02em;text-align:center}
+@keyframes pinShake{0%,100%{transform:translateX(0)}18%,54%{transform:translateX(-7px)}36%,72%{transform:translateX(7px)}}
+.pin-card.shake{animation:pinShake .38s ease}
+@keyframes pinFadeOut{to{opacity:0;pointer-events:none}}
+
+/* ══════════ NOTIFICATION BELL ══════════ */
+.notif-btn{position:relative;width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;transition:all .15s ease;flex-shrink:0}
+.notif-btn:hover{background:rgba(255,255,255,.16)}
+.notif-badge{position:absolute;top:-4px;right:-4px;background:#D64545;color:#fff;font-size:9px;font-weight:700;border-radius:8px;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--navy)}
+.notif-panel{
+  position:fixed;top:56px;right:0;bottom:0;width:340px;z-index:4000;
+  background:#fff;box-shadow:-8px 0 32px rgba(0,0,0,.15);
+  display:flex;flex-direction:column;transform:translateX(100%);
+  transition:transform .25s cubic-bezier(.22,.68,0,1.2);pointer-events:none;
+}
+.notif-panel.open{transform:translateX(0);pointer-events:all}
+.notif-header{padding:16px 16px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.notif-header h3{font-size:14px;font-weight:700;color:var(--navy)}
+.notif-close-btn{width:28px;height:28px;border-radius:7px;background:var(--soft);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--muted)}
+.notif-close-btn:hover{background:var(--line)}
+.notif-list{flex:1;overflow-y:auto;padding:10px 0}
+.notif-item{padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .1s}
+.notif-item:hover{background:var(--soft)}
+.notif-item.notif-high{border-left:3px solid #D64545}
+.notif-item.notif-med{border-left:3px solid #C97A00}
+.notif-item.notif-info{border-left:3px solid #2563AC}
+.notif-item.notif-ok{border-left:3px solid #2E9E63}
+.notif-item-title{font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.notif-item-sub{font-size:11px;color:var(--muted);line-height:1.4}
+.notif-empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:13px}
+.notif-backdrop{position:fixed;inset:0;z-index:3999;display:none}
+.notif-backdrop.open{display:block}
+
+/* ══════════ LOGOUT BUTTON ══════════ */
+.btn-logout{display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border-radius:8px;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;transition:all .15s ease;margin-top:4px}
+.btn-logout:hover{background:rgba(255,80,80,.15);color:#ff8080}
+.btn-logout svg{flex-shrink:0;opacity:.7}
+.sidebar.mini .btn-logout-text{display:none}
+.sidebar.mini .btn-logout{justify-content:center;padding:9px 0}
 </style>
 </head>
 <body>
+
+<!-- ══════════ PIN LOCK OVERLAY ══════════ -->
+<div id="pinOverlay" class="pin-overlay">
+  <div class="pin-card">
+    <img id="pinLogoImg" class="pin-logo" src="" alt="PRIME"/>
+    <div class="pin-app-name">PRIME</div>
+    <div class="pin-app-tagline">Project Resource &amp; Installation Management Engine</div>
+    <p class="pin-mode-label" id="pinModeLabel">กรอก PIN 6 หลักเพื่อเข้าสู่ระบบ</p>
+    <div class="pin-dots-row" id="pinDotsRow">
+      <span class="pin-dot"></span><span class="pin-dot"></span>
+      <span class="pin-dot"></span><span class="pin-dot"></span>
+      <span class="pin-dot"></span><span class="pin-dot"></span>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="pin-numpad">
+      <button class="pin-key" data-key="1"><span class="pin-key-num">1</span><span class="pin-key-sub">&nbsp;</span></button>
+      <button class="pin-key" data-key="2"><span class="pin-key-num">2</span><span class="pin-key-sub">ABC</span></button>
+      <button class="pin-key" data-key="3"><span class="pin-key-num">3</span><span class="pin-key-sub">DEF</span></button>
+      <button class="pin-key" data-key="4"><span class="pin-key-num">4</span><span class="pin-key-sub">GHI</span></button>
+      <button class="pin-key" data-key="5"><span class="pin-key-num">5</span><span class="pin-key-sub">JKL</span></button>
+      <button class="pin-key" data-key="6"><span class="pin-key-num">6</span><span class="pin-key-sub">MNO</span></button>
+      <button class="pin-key" data-key="7"><span class="pin-key-num">7</span><span class="pin-key-sub">PQRS</span></button>
+      <button class="pin-key" data-key="8"><span class="pin-key-num">8</span><span class="pin-key-sub">TUV</span></button>
+      <button class="pin-key" data-key="9"><span class="pin-key-num">9</span><span class="pin-key-sub">WXYZ</span></button>
+      <button class="pin-key pin-key-forgot" id="pinForgotBtn">ลืม PIN?</button>
+      <button class="pin-key" data-key="0"><span class="pin-key-num">0</span><span class="pin-key-sub">+</span></button>
+      <button class="pin-key pin-key-del" data-key="del">⌫</button>
+    </div>
+  </div>
+  <p class="pin-footer-note">PRIME v1 · UAM Factory 3 · Session หมดอายุใน 8 ชั่วโมง</p>
+</div>
+<!-- ═══════════════════════════════════════ -->
+
+<!-- ══════════ NOTIFICATION PANEL ══════════ -->
+<div class="notif-backdrop" id="notifBackdrop" onclick="closeNotifPanel()"></div>
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-header">
+    <h3>การแจ้งเตือน</h3>
+    <button class="notif-close-btn" onclick="closeNotifPanel()">✕</button>
+  </div>
+  <div class="notif-list" id="notifList"></div>
+</div>
+<!-- ═══════════════════════════════════════ -->
 
 <div style="display:flex;height:100vh;width:100%;overflow:hidden">
 
@@ -723,6 +853,12 @@ td input[type=date]{font-family:'IBM Plex Mono',monospace;font-size:12px;width:1
     </button>
     <span class="sidebar-bottom-text">ย่อเมนู</span>
   </div>
+  <div class="no-print" style="padding:4px 10px 12px">
+    <button class="btn-logout" onclick="pinLogout()" title="ออกจากระบบ">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <span class="btn-logout-text">ออกจากระบบ</span>
+    </button>
+  </div>
 </aside>
 
 <!-- ===== MAIN AREA ===== -->
@@ -746,6 +882,10 @@ td input[type=date]{font-family:'IBM Plex Mono',monospace;font-size:12px;width:1
     <div id="legend" class="legend" style="display:none"></div>
     <!-- Tools -->
     <div class="topbar-tools">
+      <button class="notif-btn no-print" id="notifBell" onclick="toggleNotifPanel()" title="การแจ้งเตือน">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-badge" id="notifCount" style="display:none">0</span>
+      </button>
       <span class="save-badge" id="saveBadge">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         <span id="saveText">พร้อมใช้งาน</span>
@@ -2352,6 +2492,15 @@ document.getElementById("importFile").onchange=e=>{
   const f=e.target.files[0];if(!f)return;
   const rd=new FileReader();
   rd.onload=()=>{try{const p=JSON.parse(rd.result);
+    // Schema validation — reject malformed imports
+    if(typeof p !== 'object' || p === null) throw new Error('invalid root');
+    if(p.project && typeof p.project !== 'object') throw new Error('invalid project');
+    if(p.tasks && !Array.isArray(p.tasks)) throw new Error('invalid tasks');
+    if(p.daily && !Array.isArray(p.daily)) throw new Error('invalid daily');
+    if(p.issues && !Array.isArray(p.issues)) throw new Error('invalid issues');
+    // Sanitize string fields in project header
+    const STR_FIELDS=['title','maker','customer','site','approved','checked','issuedBy','issuedDate','followup'];
+    if(p.project) STR_FIELDS.forEach(f=>{ if(f in p.project) p.project[f]=String(p.project[f]||"").slice(0,500); });
     if(p.project)state.project={...DEFAULT.project,...p.project};
     if(p.machines)state.machines=p.machines;
     if(p.tasks)state.tasks=p.tasks.map(t=>({cat:"",detail:"",remark:"",...t}));
@@ -2365,8 +2514,10 @@ document.getElementById("importFile").onchange=e=>{
     if(Array.isArray(p.team))state.team=p.team;
     if(Array.isArray(p.risks))state.risks=p.risks;
     if(Array.isArray(p.holidays))state.holidays=p.holidays;
-    initHeaderValues();renderAll();save();alert("โหลดไฟล์สำรองเรียบร้อย");
-  }catch(err){alert("ไฟล์ไม่ถูกต้อง");}};
+    initHeaderValues();renderAll();save();
+    refreshNotifications();
+    alert("โหลดไฟล์สำรองเรียบร้อย");
+  }catch(err){alert("ไฟล์ไม่ถูกต้อง — " + err.message);}};
   rd.readAsText(f);e.target.value="";
 };
 
@@ -2996,7 +3147,310 @@ document.addEventListener('DOMContentLoaded', function(){
   // Close proj manager on backdrop click
   var pm = document.getElementById('projManagerModal');
   if (pm) pm.addEventListener('click', function(e){ if (e.target === pm) closeProjManager(); });
+  // Init PIN lock
+  pinLockInit();
+  // Init notifications after first render
+  setTimeout(refreshNotifications, 800);
 });
+
+// ══════════════════════════════════════════════════════════
+//  PIN LOCK — PRIME Security Layer
+// ══════════════════════════════════════════════════════════
+(function(){
+  var PIN_HASH_KEY     = 'uam-pin-hash';
+  var PIN_SESSION_KEY  = 'uam-pin-session';
+  var PIN_LOCKED_KEY   = 'uam-pin-locked';
+  var PIN_ATTEMPTS_KEY = 'uam-pin-attempts';
+  var SESSION_MS       = 8 * 60 * 60 * 1000;
+  var LOCK_MS          = 15 * 60 * 1000;
+  var MAX_ATTEMPTS     = 5;
+
+  var pinBuffer  = '';
+  var setupStep  = 0;   // 0=first entry, 1=confirm
+  var setupFirst = '';
+
+  async function sha256(str) {
+    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  }
+
+  function sessionValid() {
+    var exp = localStorage.getItem(PIN_SESSION_KEY);
+    return exp && Date.now() < parseInt(exp, 10);
+  }
+
+  function createSession() {
+    localStorage.setItem(PIN_SESSION_KEY, String(Date.now() + SESSION_MS));
+  }
+
+  function isLocked() {
+    var until = parseInt(localStorage.getItem(PIN_LOCKED_KEY) || '0', 10);
+    if (Date.now() >= until) {
+      localStorage.removeItem(PIN_LOCKED_KEY);
+      localStorage.removeItem(PIN_ATTEMPTS_KEY);
+      return false;
+    }
+    return until > 0;
+  }
+
+  function lockMinsRemaining() {
+    var until = parseInt(localStorage.getItem(PIN_LOCKED_KEY) || '0', 10);
+    return Math.max(1, Math.ceil((until - Date.now()) / 60000));
+  }
+
+  function recordFailure() {
+    var n = parseInt(localStorage.getItem(PIN_ATTEMPTS_KEY) || '0', 10) + 1;
+    if (n >= MAX_ATTEMPTS) {
+      localStorage.setItem(PIN_LOCKED_KEY, String(Date.now() + LOCK_MS));
+      localStorage.setItem(PIN_ATTEMPTS_KEY, '0');
+      return true;
+    }
+    localStorage.setItem(PIN_ATTEMPTS_KEY, String(n));
+    return false;
+  }
+
+  function attemptsLeft() {
+    return MAX_ATTEMPTS - parseInt(localStorage.getItem(PIN_ATTEMPTS_KEY) || '0', 10);
+  }
+
+  function updateDots(len) {
+    var dots = document.querySelectorAll('#pinDotsRow .pin-dot');
+    dots.forEach(function(d, i){ d.classList.toggle('filled', i < len); });
+  }
+
+  function showPinError(msg) {
+    var el = document.getElementById('pinError');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.opacity = '1';
+    setTimeout(function(){ el.style.opacity = '0'; }, 3200);
+    var card = document.querySelector('.pin-card');
+    if (card) { card.classList.add('shake'); setTimeout(function(){ card.classList.remove('shake'); }, 450); }
+  }
+
+  function setLabel(txt) {
+    var el = document.getElementById('pinModeLabel');
+    if (el) el.textContent = txt;
+  }
+
+  function resetBuffer() {
+    pinBuffer = '';
+    updateDots(0);
+  }
+
+  async function submitPin(pin) {
+    if (isLocked()) {
+      showPinError('ระบบล็อก — รออีก ' + lockMinsRemaining() + ' นาที');
+      resetBuffer(); return;
+    }
+    var storedHash = localStorage.getItem(PIN_HASH_KEY);
+    if (!storedHash) {
+      // Setup mode
+      if (setupStep === 0) {
+        if (pin.length < 4) { showPinError('PIN ต้องมีอย่างน้อย 4 หลัก'); resetBuffer(); return; }
+        setupFirst = pin; setupStep = 1;
+        setLabel('ยืนยัน PIN อีกครั้ง');
+        resetBuffer(); return;
+      } else {
+        if (pin === setupFirst) {
+          var hash = await sha256(pin);
+          localStorage.setItem(PIN_HASH_KEY, hash);
+          createSession();
+          hidePinOverlay();
+        } else {
+          setupStep = 0; setupFirst = '';
+          showPinError('PIN ไม่ตรงกัน — กรุณาเริ่มใหม่');
+          setLabel('ตั้ง PIN ใหม่ (6 หลัก)');
+          resetBuffer();
+        }
+        return;
+      }
+    }
+    var hash = await sha256(pin);
+    if (hash === storedHash) {
+      localStorage.removeItem(PIN_ATTEMPTS_KEY);
+      createSession(); hidePinOverlay();
+    } else {
+      var locked = recordFailure();
+      if (locked) showPinError('PIN ผิดเกิน ' + MAX_ATTEMPTS + ' ครั้ง — ล็อก 15 นาที');
+      else showPinError('PIN ไม่ถูกต้อง — เหลืออีก ' + attemptsLeft() + ' ครั้ง');
+      resetBuffer();
+    }
+  }
+
+  function pressKey(key) {
+    var overlay = document.getElementById('pinOverlay');
+    if (!overlay) return;
+    if (isLocked()) { showPinError('ระบบล็อก — รออีก ' + lockMinsRemaining() + ' นาที'); return; }
+    if (key === 'del') { pinBuffer = pinBuffer.slice(0,-1); updateDots(pinBuffer.length); }
+    else {
+      if (pinBuffer.length >= 6) return;
+      pinBuffer += key; updateDots(pinBuffer.length);
+      if (pinBuffer.length === 6) setTimeout(function(){ submitPin(pinBuffer); }, 120);
+    }
+  }
+
+  function hidePinOverlay() {
+    var overlay = document.getElementById('pinOverlay');
+    if (!overlay) return;
+    overlay.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+    setTimeout(function(){ if(overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 450);
+  }
+
+  window.pinLockInit = function() {
+    // Copy logo from sidebar
+    var sidebarLogo = document.querySelector('.brand img');
+    var pinLogo = document.getElementById('pinLogoImg');
+    if (sidebarLogo && pinLogo) pinLogo.src = sidebarLogo.src;
+
+    var overlay = document.getElementById('pinOverlay');
+    if (!overlay) return;
+
+    if (sessionValid()) { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); return; }
+
+    // Show overlay
+    var storedHash = localStorage.getItem(PIN_HASH_KEY);
+    if (!storedHash) {
+      setLabel('ยินดีต้อนรับ — ตั้ง PIN ใหม่ (6 หลัก)');
+      document.getElementById('pinForgotBtn').style.display = 'none';
+    } else if (isLocked()) {
+      setLabel('ระบบล็อกชั่วคราว — รออีก ' + lockMinsRemaining() + ' นาที');
+    } else {
+      setLabel('กรอก PIN 6 หลักเพื่อเข้าสู่ระบบ');
+    }
+
+    // Wire numpad
+    overlay.querySelectorAll('.pin-key[data-key]').forEach(function(btn){
+      btn.addEventListener('click', function(){ pressKey(btn.dataset.key); });
+    });
+
+    // Wire keyboard
+    document.addEventListener('keydown', function onKeyDown(e) {
+      if (!document.getElementById('pinOverlay')) {
+        document.removeEventListener('keydown', onKeyDown); return;
+      }
+      if (e.key >= '0' && e.key <= '9') pressKey(e.key);
+      else if (e.key === 'Backspace') { e.preventDefault(); pressKey('del'); }
+      else if (e.key === 'Escape') { pinBuffer = ''; updateDots(0); }
+    });
+
+    // Forgot PIN
+    var forgotBtn = document.getElementById('pinForgotBtn');
+    if (forgotBtn) forgotBtn.addEventListener('click', function(){
+      if (!confirm('ล้าง PIN และออกจากระบบ\nต้องตั้งค่า PIN ใหม่ในครั้งถัดไป\n\nยืนยัน?')) return;
+      [PIN_HASH_KEY, PIN_SESSION_KEY, PIN_LOCKED_KEY, PIN_ATTEMPTS_KEY].forEach(function(k){ localStorage.removeItem(k); });
+      setupStep = 0; setupFirst = ''; resetBuffer();
+      setLabel('ตั้ง PIN ใหม่ (6 หลัก)');
+      forgotBtn.style.display = 'none';
+      document.getElementById('pinError').textContent = '';
+    });
+  };
+
+  window.pinLogout = function() {
+    localStorage.removeItem(PIN_SESSION_KEY);
+    location.reload();
+  };
+
+  // Auto-relock when tab regains focus and session has expired
+  document.addEventListener('visibilitychange', function(){
+    if (!document.hidden && !sessionValid() && !document.getElementById('pinOverlay')) {
+      location.reload();
+    }
+  });
+})();
+
+// ══════════════════════════════════════════════════════════
+//  NOTIFICATION SYSTEM
+// ══════════════════════════════════════════════════════════
+function buildNotifications() {
+  var items = [];
+  var today = TODAY; // already defined as YYYY-MM-DD string
+  var state = typeof window.state !== 'undefined' ? window.state : null;
+  if (!state) return items;
+
+  // Deadline proximity
+  var signDate = (state.project && state.project.date) ? state.project.date : '2026-06-30';
+  var daysLeft = Math.round((new Date(signDate) - new Date(today)) / 86400000);
+  if (daysLeft >= 0 && daysLeft <= 5) {
+    items.push({level:'high', title:'วันลงนามใกล้มาถึง', sub:'เหลือ ' + daysLeft + ' วัน (' + signDate + ') — ตรวจสอบ Sign-off ให้ครบ', tab:'signoff'});
+  } else if (daysLeft < 0) {
+    items.push({level:'high', title:'วันลงนามเลยกำหนดแล้ว', sub:'กำหนด ' + signDate + ' (เลยมา ' + Math.abs(daysLeft) + ' วัน)', tab:'signoff'});
+  }
+
+  // Open issues
+  var openIssues = (state.issues || []).filter(function(i){ return i.status === 'open' || i.status === 'inprogress'; });
+  openIssues.forEach(function(i){
+    items.push({level: i.severity === 'high' ? 'high' : 'med', title:'ปัญหา: ' + (i.title || '(ไม่มีหัวข้อ)'), sub:'เครื่อง: ' + (i.machine || 'ALL') + ' · ' + (i.status === 'high' ? 'ระดับสูง' : 'กำลังแก้ไข'), tab:'issues'});
+  });
+
+  // Overdue tasks (end date < today, not complete)
+  var overdueTasks = (state.tasks || []).filter(function(t){
+    return t.end && t.end < today && t.status !== 'complete';
+  });
+  overdueTasks.forEach(function(t){
+    items.push({level:'med', title:'งานล่าช้า: ' + (t.desc || '').slice(0,50), sub:'กำหนด ' + t.end + ' · ' + (t.pic || '') + ' · ' + Math.round(t.progress||0) + '%', tab:'table'});
+  });
+
+  // Actions due today or overdue
+  var overdueActions = (state.actions || []).filter(function(a){
+    return a.due && a.due <= today && a.status !== 'done';
+  });
+  if (overdueActions.length) {
+    items.push({level:'med', title:'To-do ค้างอยู่ ' + overdueActions.length + ' รายการ', sub:'มีงานที่ถึงกำหนดหรือเกินกำหนดแล้ว', tab:'actions'});
+  }
+
+  // Risks with high level open
+  var highRisks = (state.risks || []).filter(function(r){ return riskLevel(r.likelihood, r.impact) === 'high' && r.status !== 'closed'; });
+  if (highRisks.length) {
+    items.push({level:'med', title:'ความเสี่ยงระดับสูง ' + highRisks.length + ' รายการ', sub:'ตรวจสอบมาตรการลดความเสี่ยง', tab:'risks'});
+  }
+
+  // All good?
+  if (items.length === 0) {
+    items.push({level:'ok', title:'ทุกอย่างเรียบร้อย', sub:'ไม่มีการแจ้งเตือนที่ต้องดำเนินการ', tab:null});
+  }
+
+  return items;
+}
+
+function refreshNotifications() {
+  var items = buildNotifications();
+  var countEl = document.getElementById('notifCount');
+  var urgent = items.filter(function(i){ return i.level === 'high' || i.level === 'med'; }).length;
+  if (countEl) {
+    if (urgent > 0) { countEl.textContent = urgent; countEl.style.display = 'flex'; }
+    else { countEl.style.display = 'none'; }
+  }
+  var list = document.getElementById('notifList');
+  if (!list) return;
+  if (items.length === 0) { list.innerHTML = '<div class="notif-empty">ไม่มีการแจ้งเตือน</div>'; return; }
+  list.innerHTML = items.map(function(item){
+    var cls = 'notif-item notif-' + item.level;
+    var icon = item.level === 'high' ? '🔴' : item.level === 'med' ? '🟡' : '🟢';
+    var click = item.tab ? 'onclick="closeNotifPanel();document.getElementById(\'view' + item.tab.charAt(0).toUpperCase() + item.tab.slice(1) + '\').click()"' : '';
+    return '<div class="' + cls + '" ' + click + '>' +
+      '<div class="notif-item-title">' + icon + ' ' + esc(item.title) + '</div>' +
+      '<div class="notif-item-sub">' + esc(item.sub) + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleNotifPanel() {
+  var panel = document.getElementById('notifPanel');
+  var backdrop = document.getElementById('notifBackdrop');
+  var isOpen = panel.classList.contains('open');
+  if (!isOpen) { refreshNotifications(); }
+  panel.classList.toggle('open', !isOpen);
+  backdrop.classList.toggle('open', !isOpen);
+}
+
+function closeNotifPanel() {
+  var panel = document.getElementById('notifPanel');
+  var backdrop = document.getElementById('notifBackdrop');
+  if (panel) panel.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('open');
+}
 
 </script>
 </body>
