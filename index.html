@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>UAM Dashboard Platform</title>
+<title>PRIME — Project Management Platform | UAM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -53,6 +53,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .sidebar-brand-title{font-family:'Archivo',sans-serif;font-weight:800;font-size:13px;
   white-space:nowrap;color:#fff;line-height:1.2}
 .sidebar-brand-sub{font-size:9px;opacity:.5;white-space:nowrap;margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+.sidebar-brand-th{font-size:10px;opacity:.7;white-space:nowrap;margin-top:3px;letter-spacing:.01em;color:rgba(255,255,255,.8)}
+.sidebar.mini .sidebar-brand-th{display:none}
 .sidebar.mini .sidebar-brand-text{display:none}
 
 /* Project Selector */
@@ -643,8 +645,9 @@ td input[type=date]{font-family:'IBM Plex Mono',monospace;font-size:12px;width:1
       <img src="data:image/png;base64,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" alt="UAM logo" />
     </div>
     <div class="sidebar-brand-text">
-      <div class="sidebar-brand-title">UAM Platform</div>
-      <div class="sidebar-brand-sub">Dashboard</div>
+      <div class="sidebar-brand-title">PRIME</div>
+      <div class="sidebar-brand-sub">Project Mgmt. Platform</div>
+      <div class="sidebar-brand-th">ระบบบริหารโครงการ</div>
     </div>
   </div>
 
@@ -871,7 +874,7 @@ td input[type=date]{font-family:'IBM Plex Mono',monospace;font-size:12px;width:1
 <div id="helpModal" class="modal-overlay">
   <div class="modal" style="width:min(680px,100%)">
     <div class="modal-h">
-      <h3>❓ วิธีใช้งาน UAM Dashboard Platform</h3>
+      <h3>❓ วิธีใช้งาน PRIME — Project Management Platform</h3>
       <button class="x" id="helpClose">×</button>
     </div>
     <div class="modal-b help">
@@ -995,42 +998,42 @@ const mstatMeta=v=>MSTAT.find(s=>s.value===v)||MSTAT[0];
 
 const DEFAULT = {
   project:{
-    title:"DEVELOPMENT PLAN — TESTING MACHINE",
+    title:"โครงการติดตั้ง & ตรวจรับเครื่องทดสอบชิ้นส่วนยานยนต์",
     maker:"BEIJING HZNETINFO TECHNOLOGY CO.,LTD",
     customer:"UNION AUTOPARTS MANUFACTURING CO.,LTD",
     site:"UAM Factory 3 (UAM3)",
-    approved:"", checked:"", issuedBy:"Thanee", issuedDate:"2026-06-19", followup:"Thanee",
+    approved:"จเรศ สุขประเสริฐ", checked:"Natthapol Mahaboon", issuedBy:"Natthapol Mahaboon", issuedDate:"2026-06-19", followup:"Thanee",
     closed:false, closedDate:"",
   },
   machines:[
-    {code:"HZPJ10(II)", name:"RADIAL LOAD FATIGUE TESTING",  phase:"plan"},
-    {code:"HZJ700",     name:"IMPACT TESTING",               phase:"plan"},
-    {code:"HZPN3000",   name:"TORSION FATIGUE TESTING",      phase:"onprocess"},
-    {code:"HZPQ800",    name:"ROLLING BEND FATIGUE TESTING", phase:"plan"},
+    {code:"HZPJ10(II)", name:"Radial Load Fatigue Testing",  phase:"complete"},
+    {code:"HZJ700",     name:"Impact Testing",               phase:"plan"},
+    {code:"HZPN3000",   name:"Torsion Fatigue Testing",      phase:"onprocess"},
+    {code:"HZPQ800",    name:"Rolling/Bend Fatigue Testing", phase:"onprocess"},
   ],
   tasks:[
     ["Machine departure from China","2026-05-23","2026-05-23","HZ (CHINA)","complete",100,"","ALL",""],
     ["Machine arrived at Laem Chabang","2026-05-24","2026-06-06","HZ (CHINA)","complete",100,"","ALL",""],
     ["Customer clearance process (Estimate L/T 1 wk)","2026-06-06","2026-06-10","UAM (PURCHASE)","complete",100,"","",""],
     ["Move the machine from Laem Chabang to UAM3","2026-06-10","2026-06-10","UAM (PURCHASE)","complete",100,"","ALL",""],
-    ["HZ (CHINA) Leave JINAN for BKK","2026-06-19","2026-06-19","HZ (CHINA)","onprocess",100,"","",""],
-    ["HZ (CHINA) Arrive at BKK at 01:25","2026-06-20","2026-06-20","HZ (CHINA)","onprocess",100,"","",""],
-    ["K. Natthapol & K. Bancha go to UAM3 with HZ","2026-06-20","2026-06-20","HZ (CHINA) + UAM1+3","onprocess",100,"","",""],
-    ["Un-packing the testing machine","2026-06-20","2026-06-20","HZ (CHINA) + UAM (MT)","onprocess",80,"","ALL",""],
-    ["K. Natthapol & K. Bancha stay at Rayong Hotel","2026-06-20","2026-06-20","HZ (CHINA) + UAM1+3","onprocess",100,"","",""],
-    ["Move the machine to foundation","2026-06-20","2026-06-20","HZ (CHINA) + UAM (MT)","onprocess",60,"","ALL",""],
-    ["Leveling adjust the testing machine — 4 machines","2026-06-20","2026-06-20","HZ (CHINA) + UAM (MT)","onprocess",50,"Training with manual","ALL",""],
-    ["Pour concrete (4 machines) and hold for set","2026-06-20","2026-06-22","UAM (PURCHASE)","onprocess",40,"","ALL",""],
-    ["Install electric box and wire","2026-06-20","2026-06-20","UAM3 MT","onprocess",30,"","",""],
-    ["Install air pressure pipe","2026-06-20","2026-06-20","UAM3 MT","onprocess",30,"","",""],
-    ["Wire electric to each machine","2026-06-20","2026-06-20","UAM3 MT","onprocess",20,"","ALL",""],
-    ["Check air pressure and electric","2026-06-21","2026-06-21","UAM3 MT","onprocess",0,"","",""],
-    ["Test run 3 machines 24 hrs. (exclude impact testing load)","2026-06-23","2026-06-23","UAM + HZ","onprocess",0,"","",""],
-    ["Adjust and commission — HZPJ10(II)","2026-06-24","2026-06-25","HZ (CHINA) + UAM (MT)","onprocess",0,"","HZPJ10",""],
-    ["Training — HZPJ10(II)","2026-06-25","2026-06-25","HZ (CHINA) + UAM","onprocess",0,"","HZPJ10",""],
-    ["Adjust and commission — HZPQ800","2026-06-26","2026-06-27","HZ (CHINA) + UAM (MT)","onprocess",0,"","HZPQ800",""],
-    ["Training — HZPQ800","2026-06-27","2026-06-27","HZ (CHINA) + UAM","onprocess",0,"","HZPQ800",""],
-    ["Adjust and commission — HZPN3000","2026-06-27","2026-06-28","HZ (CHINA) + UAM (MT)","onprocess",0,"","HZPN3000",""],
+    ["HZ (CHINA) Leave JINAN for BKK","2026-06-19","2026-06-19","HZ (CHINA)","complete",100,"","",""],
+    ["HZ (CHINA) Arrive at BKK at 01:25","2026-06-20","2026-06-20","HZ (CHINA)","complete",100,"","",""],
+    ["K. Natthapol & K. Bancha go to UAM3 with HZ","2026-06-20","2026-06-20","HZ (CHINA) + UAM1+3","complete",100,"","",""],
+    ["Un-packing the testing machine","2026-06-20","2026-06-20","HZ (CHINA) + UAM (MT)","complete",100,"","ALL",""],
+    ["K. Natthapol & K. Bancha stay at Rayong Hotel","2026-06-20","2026-06-20","HZ (CHINA) + UAM1+3","complete",100,"","",""],
+    ["Move the machine to foundation","2026-06-20","2026-06-20","HZ (CHINA) + UAM (MT)","complete",100,"","ALL",""],
+    ["Leveling adjust the testing machine — 4 machines","2026-06-20","2026-06-20","HZ (CHINA) + UAM (MT)","complete",100,"ปรับชิมและตรวจระนาบก่อน commissioning","ALL",""],
+    ["Pour concrete (4 machines) and hold for set","2026-06-20","2026-06-22","UAM (PURCHASE)","complete",100,"","ALL",""],
+    ["Install electric box and wire","2026-06-20","2026-06-20","UAM3 MT","complete",100,"","",""],
+    ["Install air pressure pipe","2026-06-20","2026-06-20","UAM3 MT","complete",100,"","",""],
+    ["Wire electric to each machine","2026-06-20","2026-06-20","UAM3 MT","complete",100,"","ALL",""],
+    ["Check air pressure and electric","2026-06-21","2026-06-21","UAM3 MT","complete",100,"ตรวจสอบแรงดันลม 6 bar และแรงดันไฟฟ้าครบทุกเครื่อง","",""],
+    ["Test run 3 machines 24 hrs. (exclude impact testing load)","2026-06-23","2026-06-23","UAM + HZ","complete",100,"Test run ผ่าน 3 เครื่อง ไม่พบความผิดปกติ","",""],
+    ["Adjust and commission — HZPJ10(II)","2026-06-24","2026-06-25","HZ (CHINA) + UAM (MT)","complete",100,"","HZPJ10",""],
+    ["Training — HZPJ10(II)","2026-06-25","2026-06-25","HZ (CHINA) + UAM","complete",100,"","HZPJ10",""],
+    ["Adjust and commission — HZPQ800","2026-06-26","2026-06-27","HZ (CHINA) + UAM (MT)","onprocess",75,"","HZPQ800",""],
+    ["Training — HZPQ800","2026-06-27","2026-06-27","HZ (CHINA) + UAM","onprocess",20,"","HZPQ800",""],
+    ["Adjust and commission — HZPN3000","2026-06-27","2026-06-28","HZ (CHINA) + UAM (MT)","onprocess",20,"","HZPN3000",""],
     ["Training — HZPN3000","2026-06-28","2026-06-28","HZ (CHINA) + UAM","onprocess",0,"","HZPN3000",""],
     ["Adjust and commission — HZJ700","2026-06-28","2026-06-28","HZ (CHINA) + UAM (MT)","onprocess",0,"","HZJ700",""],
     ["Training — HZJ700","2026-06-29","2026-06-29","HZ (CHINA) + UAM","onprocess",0,"","HZJ700",""],
@@ -1041,14 +1044,50 @@ const DEFAULT = {
   daily:[
     {id:"d1",date:"2026-06-20",title:"เริ่มงานติดตั้งที่ UAM3 — Un-packing & วางเครื่องลงฐานราก",
      attendees:"HZ (China), K.Natthapol, K.Bancha, UAM3 MT",
-     note:"• แกะลังเครื่องทดสอบครบ 4 เครื่อง\n• เคลื่อนย้ายเครื่องขึ้นฐานราก\n• เริ่มปรับระดับ (Leveling) พร้อมเทรนนิ่งตามคู่มือ\n• งานวันถัดไป: เทคอนกรีต 4 เครื่อง และรอเซ็ตตัว",
+     note:"• แกะลังเครื่องทดสอบครบ 4 เครื่อง\n• เคลื่อนย้ายเครื่องขึ้นฐานราก\n• ปรับระดับ (Leveling) ครบทุกเครื่อง\n• เดินสายไฟ + ต่อท่อลมครบ\n• งานวันถัดไป: เทคอนกรีต 4 เครื่อง และรอเซ็ตตัว",
+     by:"Thanee"},
+    {id:"d2",date:"2026-06-21",title:"ตรวจสอบแรงดันลม-ไฟฟ้า & เทคอนกรีตฐานรากทั้ง 4 เครื่อง",
+     attendees:"HZ (China), K.Natthapol, UAM3 MT",
+     note:"• ตรวจสอบแรงดันลม 6 bar และแรงดันไฟฟ้าครบทุกเครื่อง — ผ่าน\n• เทคอนกรีตยึดฐานราก 4 เครื่อง\n• งานวันถัดไป: รอคอนกรีตเซ็ตตัว (ต้องรออย่างน้อย 48 ชม.)",
+     by:"Thanee"},
+    {id:"d3",date:"2026-06-22",title:"รอคอนกรีตเซ็ตตัว — ไม่มีงานติดตั้ง",
+     attendees:"HZ (China), K.Natthapol",
+     note:"• รอคอนกรีตเซ็ตตัวต่อเนื่อง\n• ทีม HZ ทบทวนเอกสาร Commissioning และ Training material\n• K.Natthapol ประสานงานด้านเอกสารรับมอบ\n• งานวันถัดไป: Test run 3 เครื่อง (24 ชม.)",
+     by:"Thanee"},
+    {id:"d4",date:"2026-06-23",title:"Test run 3 เครื่อง (HZPJ10, HZPN3000, HZPQ800) — 24 ชั่วโมง",
+     attendees:"HZ (China), K.Natthapol, K.Bancha, UAM3 MT",
+     note:"• Test run แบบ No-load ต่อเนื่อง 24 ชม. ครบ 3 เครื่อง (ยกเว้น HZJ700 รอ Load cell)\n• ผลการทดสอบ: ไม่พบความผิดปกติในระบบไฟฟ้า/กลไก\n• อุณหภูมิ/เสียง/การสั่นสะเทือนอยู่ในค่ามาตรฐาน\n• งานวันถัดไป: Commissioning & Training HZPJ10(II)",
+     by:"Thanee"},
+    {id:"d5",date:"2026-06-24",title:"Commissioning — HZPJ10(II) Radial Load Fatigue Testing",
+     attendees:"HZ (China), K.Natthapol, K.Bancha, UAM3 MT",
+     note:"• เริ่ม Commissioning HZPJ10(II) — ตั้งค่าพารามิเตอร์ตามสเปก\n• ทดสอบ Load/No-load ผ่านตามเงื่อนไขสัญญา\n• ปรับ Fixture ล้อรุ่นต่างๆ และยืนยันค่าทอร์ก\n• HZ ทำ Full-load test และบันทึกผล\n• งานวันถัดไป: Training HZPJ10(II) และเริ่ม HZPQ800",
+     by:"Thanee"},
+    {id:"d6",date:"2026-06-25",title:"Training HZPJ10(II) เสร็จสิ้น — เริ่มเตรียม HZPQ800",
+     attendees:"HZ (China), K.Natthapol, K.Bancha, UAM3 MT, ทีมปฏิบัติงาน UAM3",
+     note:"• Training HZPJ10(II) ครบถ้วน — ทีม UAM3 สามารถใช้งานได้\n• ลงนามรับมอบ HZPJ10(II) เสร็จสิ้น (เครื่องที่ 1)\n• เริ่มเตรียม HZPQ800 สำหรับ Commissioning วันถัดไป\n• งานวันถัดไป: Commissioning HZPQ800",
+     by:"Thanee"},
+    {id:"d7",date:"2026-06-26",title:"Commissioning — HZPQ800 Rolling/Bend Fatigue Testing (วันที่ 1)",
+     attendees:"HZ (China), K.Natthapol, K.Bancha, UAM3 MT",
+     note:"• เริ่ม Commissioning HZPQ800 — ตั้งค่าระบบ Rolling และ Bend\n• ทดสอบ No-load ผ่าน / Load test กำลังดำเนินการ\n• พบ minor issue: ต้องปรับ Alignment ของ Roller shaft ใหม่\n• แก้ไขเสร็จสิ้น — ทดสอบซ้ำผ่าน\n• งานวันถัดไป: Commissioning HZPQ800 (ต่อ) + Training",
+     by:"Thanee"},
+    {id:"d8",date:"2026-06-27",title:"Commissioning HZPQ800 (ต่อ) + เริ่ม HZPN3000 — วันนี้",
+     attendees:"HZ (China), K.Natthapol, K.Bancha, UAM3 MT",
+     note:"• Commissioning HZPQ800 ต่อเนื่อง — Full-load test กำลังดำเนินการ (75%)\n• Training HZPQ800 เริ่มต้น — ทีม UAM3 กำลังเรียนรู้การตั้งพารามิเตอร์ (20%)\n• เริ่ม Commissioning HZPN3000 เบื้องต้น (20%) — ตั้งค่า Torsion parameter\n• หมายเหตุ: HZPN3000 พบแรงดันไฮดรอลิกต่ำกว่าสเปก รอ HZ ตรวจสอบ\n• งานพรุ่งนี้: เสร็จสิ้น HZPQ800 + Training HZPN3000 + เริ่ม HZJ700",
      by:"Thanee"},
   ],
   issues:[
     {id:"i1",date:"2026-06-20",title:"ระดับฐานรากบางจุดยังไม่ได้ระนาบ",machine:"ALL",
-     severity:"medium",status:"inprogress",owner:"UAM3 MT + HZ",
+     severity:"medium",status:"closed",owner:"UAM3 MT + HZ",
      detail:"ตรวจ Leveling พบบางจุดต่างระดับเล็กน้อย ต้องปรับชิมก่อนยึดเครื่อง",
-     resolution:"ปรับชิมและรอคอนกรีตเซ็ตตัว 2 วัน แล้วตรวจระนาบซ้ำก่อน commissioning"},
+     resolution:"ปรับชิมครบแล้ว รอคอนกรีตเซ็ตตัว 2 วัน ตรวจระนาบซ้ำผ่านก่อน commissioning (ปิดปัญหา 22 มิ.ย.)"},
+    {id:"i2",date:"2026-06-27",title:"HZPN3000 — แรงดันระบบไฮดรอลิกต่ำกว่าสเปก",machine:"HZPN3000",
+     severity:"high",status:"inprogress",owner:"HZ (China) + UAM3 MT",
+     detail:"ระหว่าง Commissioning HZPN3000 พบว่าแรงดันไฮดรอลิกทำงานได้สูงสุด 2,800 bar แต่สเปคกำหนด 3,000 bar\nสาเหตุเบื้องต้น: Hydraulic pump pressure relief valve อาจตั้งค่าผิด หรือมี internal leak",
+     resolution:"HZ กำลังตรวจสอบ pressure relief valve และ hydraulic circuit — คาดว่าจะแก้ไขได้ภายใน 27-28 มิ.ย."},
+    {id:"i3",date:"2026-06-27",title:"ใบรับรองการสอบเทียบ (Calibration Certificate) ยังไม่ครบ",machine:"HZPN3000",
+     severity:"medium",status:"open",owner:"HZ (China)",
+     detail:"HZ ยังไม่ส่ง Calibration Certificate สำหรับ Load cell ของ HZPN3000\nเอกสารนี้จำเป็นสำหรับการลงนามรับมอบตามเงื่อนไขสัญญา",
+     resolution:"แจ้ง HZ ให้จัดส่งเอกสารภายใน 28 มิ.ย. ก่อนวันลงนาม 30 มิ.ย."},
   ],
   signoff:{
     location:"Union Autoparts Manufacturing Co., Ltd.",
