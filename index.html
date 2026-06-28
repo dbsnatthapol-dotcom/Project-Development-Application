@@ -293,6 +293,40 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .mod-check.locked{opacity:.6;cursor:default;background:var(--soft)}
 .mod-check.locked input{cursor:default}
 
+/* ===== CHARTS ===== */
+#chartTip{position:fixed;pointer-events:none;background:#1A2536;color:#fff;font-size:11.5px;font-weight:500;padding:7px 11px;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.22);opacity:0;transform:translateY(3px);transition:opacity .12s,transform .12s;z-index:9000;white-space:nowrap;line-height:1.55}
+#chartTip.show{opacity:1;transform:translateY(0)}
+#chartTip b{font-weight:700}
+.ck-charts{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:16px}
+@media(max-width:860px){.ck-charts{grid-template-columns:1fr}}
+.chart-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-1);padding:16px 18px}
+.chart-card .cc-h{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.chart-card .cc-h h3{font-size:13.5px;font-weight:700;color:var(--ink)}
+.chart-card .cc-h p{font-size:11px;color:var(--muted);margin-top:2px}
+.chart-card .cc-metric{font-size:11px;font-weight:600;color:var(--muted);text-align:right;line-height:1.4}
+.chart-card .cc-metric b{display:block;font-family:'Archivo',sans-serif;font-size:17px;font-weight:700}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--soft);justify-content:center}
+.chart-legend .lg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-weight:500;cursor:pointer;user-select:none;transition:opacity .15s}
+.chart-legend .lg .sw{width:16px;height:3px;border-radius:2px}
+.chart-legend .lg .sw.dot{width:10px;height:10px;border-radius:2px}
+.chart-legend .lg.off{opacity:.32}
+.chart-fallback{display:flex;align-items:center;justify-content:center;min-height:150px;color:var(--faint,#94A3B8);font-size:12.5px;text-align:center;padding:20px}
+.k-spark{margin-top:10px;height:26px}
+.k-spark svg{display:block;width:100%;height:26px;overflow:visible}
+.chart-hoverable{cursor:pointer;transition:opacity .12s}
+.chart-dimmed{opacity:.32}
+svg .c-grid{stroke:var(--line);stroke-width:1}
+svg .c-grid.solid{stroke:#D4DBE3}
+svg .c-axis{fill:#94A3B8;font-size:10px;font-family:'Inter','Sarabun',sans-serif}
+svg .c-val{fill:var(--ink);font-size:10px;font-weight:600;font-family:'IBM Plex Mono',monospace}
+.c-draw{stroke-dasharray:1600;stroke-dashoffset:1600;animation:cDraw 1.1s ease-out forwards}
+@keyframes cDraw{to{stroke-dashoffset:0}}
+.c-ring{animation:cRing .95s ease-out forwards}
+@keyframes cRing{to{stroke-dashoffset:var(--off)}}
+.c-fade{opacity:0;animation:cFade .4s ease forwards;animation-delay:.8s}
+@keyframes cFade{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.c-draw,.c-ring,.c-fade{animation:none!important;stroke-dashoffset:var(--off,0)!important;opacity:1!important}}
+
 /* ===== CONTENT AREA ===== */
 .section{margin-top:0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 2px rgba(11,37,69,.04)}
@@ -1482,6 +1516,124 @@ function bindHeader(){
   i2.addEventListener("input",()=>{state.project.issuedBy=i2.value;document.getElementById("f-issuedBy").value=i2.value;save();renderFoot();});
 }
 
+// ================= CHART ENGINE (dependency-free SVG) =================
+const CHART_C={steel:"#2C5F8A",teal:"#2F7A6B",ochre:"#A87B2C",brick:"#A8443A",slate:"#5B7393",navy:"#16314F",muted:"#94A3B8",line:"#E4E8EE"};
+function _ce(tag,a,html){const e=document.createElementNS("http://www.w3.org/2000/svg",tag);for(const k in a)e.setAttribute(k,a[k]);if(html!=null)e.innerHTML=html;return e;}
+function _ctip(){let t=document.getElementById("chartTip");if(!t){t=document.createElement("div");t.id="chartTip";document.body.appendChild(t);}return t;}
+function _ctShow(e,html){const t=_ctip();t.innerHTML=html;t.classList.add("show");_ctMove(e);}
+function _ctMove(e){const t=_ctip();let x=e.clientX+14,y=e.clientY+14;if(x>window.innerWidth-190)x=e.clientX-176;t.style.left=x+"px";t.style.top=y+"px";}
+function _ctHide(){const t=document.getElementById("chartTip");if(t)t.classList.remove("show");}
+function _fmtShort(ms){const d=new Date(ms);return d.getDate()+" "+TH_M[d.getMonth()];}
+
+// Build planned vs actual cumulative curves + sparkline series from real tasks
+function projectTimeline(){
+  const tasks=(state.tasks||[]).filter(t=>t.start&&t.end&&!isNaN(parse(t.start))&&!isNaN(parse(t.end))&&parse(t.end)>=parse(t.start));
+  if(tasks.length<1)return null;
+  let minS=Math.min.apply(null,tasks.map(t=>+parse(t.start)));
+  let maxE=Math.max.apply(null,tasks.map(t=>+parse(t.end)));
+  if(state.signoff&&state.signoff.date&&!isNaN(parse(state.signoff.date)))maxE=Math.max(maxE,+parse(state.signoff.date));
+  if(maxE<=minS)maxE=minS+864e5;
+  const todayMs=+parse(TODAY),N=12;
+  const dates=[],planned=[],actual=[],progressFull=[],started=[],completed=[],inproc=[];
+  for(let i=0;i<N;i++){
+    const ms=minS+(maxE-minS)*i/(N-1);dates.push(ms);
+    let sp=0,sa=0,cS=0,cC=0;
+    tasks.forEach(t=>{
+      const s=+parse(t.start),e=+parse(t.end),pf=Math.max(0,Math.min(1,(+(t.progress||0))/100));
+      const planFrac=e>s?Math.max(0,Math.min(1,(ms-s)/(e-s))):(ms>=s?1:0);
+      sp+=planFrac;
+      const refEnd=Math.min(todayMs,e);let acc;
+      if(refEnd<=s)acc=(ms>=s?1:0);else acc=Math.max(0,Math.min(1,(ms-s)/(refEnd-s)));
+      sa+=pf*acc;
+      if(ms>=s)cS++;
+      if(t.status==="complete"&&ms>=e)cC++;
+    });
+    planned.push(Math.round(sp/tasks.length*100));
+    progressFull.push(Math.round(sa/tasks.length*100));
+    actual.push(ms<=todayMs?Math.round(sa/tasks.length*100):null);
+    started.push(cS);completed.push(cC);inproc.push(Math.max(0,cS-cC));
+  }
+  let todayIdx=0;for(let i=0;i<N;i++){if(dates[i]<=todayMs)todayIdx=i;}
+  return {dates,planned,actual,progressFull,started,completed,inproc,todayIdx,N};
+}
+
+function buildSparkline(mount,vals,col){
+  if(!vals||vals.length<2){mount.innerHTML="";return;}
+  const w=120,h=26,mx=Math.max.apply(null,vals),mn=Math.min.apply(null,vals);
+  const pts=vals.map((v,i)=>[i/(vals.length-1)*w, h-((v-mn)/((mx-mn)||1))*(h-4)-2]);
+  const d="M"+pts.map(p=>p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" L ");
+  const svg=_ce("svg",{viewBox:"0 0 "+w+" "+h,preserveAspectRatio:"none"});
+  svg.appendChild(_ce("path",{d:d,fill:"none",stroke:col,"stroke-width":1.8,"stroke-linecap":"round","stroke-linejoin":"round",class:"c-draw",opacity:".85"}));
+  const lp=pts[pts.length-1];
+  svg.appendChild(_ce("circle",{cx:lp[0],cy:lp[1],r:2.4,fill:col,class:"c-fade"}));
+  mount.innerHTML="";mount.appendChild(svg);
+}
+
+function buildSCurve(mount,legend,tl){
+  mount.innerHTML="";
+  if(!tl){mount.innerHTML='<div class="chart-fallback">ยังไม่มีข้อมูลงานเพียงพอสำหรับสร้างกราฟ<br>เพิ่มงานที่มีวันเริ่ม–สิ้นสุดในโมดูลตาราง</div>';if(legend)legend.innerHTML="";return;}
+  const W=560,H=232,pl=40,pr=20,pt=16,pb=28,iw=W-pl-pr,ih=H-pt-pb;
+  const x=i=>pl+i/(tl.N-1)*iw, y=v=>pt+(1-v/100)*ih;
+  const svg=_ce("svg",{viewBox:"0 0 "+W+" "+H,width:"100%",style:"overflow:visible"});
+  [0,25,50,75,100].forEach(g=>{
+    svg.appendChild(_ce("line",{x1:pl,y1:y(g),x2:W-pr,y2:y(g),class:"c-grid"+(g===0?" solid":""),"stroke-dasharray":g===0?"0":"2 4"}));
+    svg.appendChild(_ce("text",{x:pl-8,y:y(g)+3,"text-anchor":"end",class:"c-axis"},g+"%"));
+  });
+  tl.dates.forEach((ms,i)=>{if(i%2===0)svg.appendChild(_ce("text",{x:x(i),y:H-9,"text-anchor":"middle",class:"c-axis"},_fmtShort(ms)));});
+  svg.appendChild(_ce("line",{x1:x(tl.todayIdx),y1:pt,x2:x(tl.todayIdx),y2:pt+ih,stroke:CHART_C.slate,"stroke-width":1,"stroke-dasharray":"3 3",opacity:".7"}));
+  svg.appendChild(_ce("text",{x:x(tl.todayIdx),y:pt-3,"text-anchor":"middle",class:"c-axis",fill:CHART_C.navy,style:"font-weight:700"},"วันนี้"));
+  function line(vals,col,name,fill){
+    const ptsArr=[];vals.forEach((v,i)=>{if(v!=null)ptsArr.push([x(i),y(v),i,v]);});
+    if(ptsArr.length<1)return _ce("g",{});
+    const d="M"+ptsArr.map(p=>p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" L ");
+    if(fill){const a=d+" L "+ptsArr[ptsArr.length-1][0].toFixed(1)+" "+y(0)+" L "+ptsArr[0][0].toFixed(1)+" "+y(0)+" Z";svg.appendChild(_ce("path",{d:a,fill:col,"fill-opacity":.05}));}
+    const g=_ce("g",{});
+    g.appendChild(_ce("path",{d:d,fill:"none",stroke:col,"stroke-width":2.2,"stroke-linecap":"round","stroke-linejoin":"round",class:"c-draw"}));
+    ptsArr.forEach(p=>{const dot=_ce("circle",{cx:p[0],cy:p[1],r:3,fill:"#fff",stroke:col,"stroke-width":1.8,class:"chart-hoverable c-fade"});
+      dot.addEventListener("mousemove",e=>_ctShow(e,"<b>"+_fmtShort(tl.dates[p[2]])+"</b><br>"+name+": <b>"+p[3]+"%</b>"));
+      dot.addEventListener("mouseleave",_ctHide);g.appendChild(dot);});
+    const last=ptsArr[ptsArr.length-1];
+    g.appendChild(_ce("text",{x:last[0]+(name==="ผลจริง"?-2:6),y:last[1]+(name==="ผลจริง"?15:-7),"text-anchor":name==="ผลจริง"?"end":"start",class:"c-val c-fade",fill:col},last[3]+"%"));
+    svg.appendChild(g);return g;
+  }
+  const gP=line(tl.planned,CHART_C.steel,"แผน",true);
+  const gA=line(tl.actual,CHART_C.teal,"ผลจริง",true);
+  mount.appendChild(svg);
+  if(legend){legend.innerHTML="";
+    [["แผน (Planned)",CHART_C.steel,gP],["ผลจริง (Actual)",CHART_C.teal,gA]].forEach(it=>{
+      const d=document.createElement("div");d.className="lg";d.innerHTML='<span class="sw" style="background:'+it[1]+'"></span>'+it[0];
+      d.onclick=()=>{d.classList.toggle("off");it[2].style.display=d.classList.contains("off")?"none":"";};legend.appendChild(d);});
+  }
+}
+
+function buildStatusDonut(mount,legend){
+  mount.innerHTML="";
+  const t=state.tasks||[];
+  const segs=STATUS.map(s=>({label:s.label,value:t.filter(x=>x.status===s.value).length,color:s.raw})).filter(s=>s.value>0);
+  const total=segs.reduce((a,b)=>a+b.value,0);
+  if(!total){mount.innerHTML='<div class="chart-fallback">ยังไม่มีงานในระบบ</div>';if(legend)legend.innerHTML="";return;}
+  const avg=t.length?Math.round(t.reduce((a,x)=>a+ +(x.progress||0),0)/t.length):0;
+  const size=210,cx=size/2,cy=size/2,r=size*0.345,sw=size*0.105,c=2*Math.PI*r;
+  const svg=_ce("svg",{viewBox:"0 0 "+size+" "+size,width:"100%",style:"max-width:"+size+"px;display:block;margin:0 auto;overflow:visible"});
+  svg.appendChild(_ce("circle",{cx:cx,cy:cy,r:r,fill:"none",stroke:"#EEF1F5","stroke-width":sw}));
+  let acc=0;
+  segs.forEach(s=>{
+    const frac=s.value/total,off=c*(1-frac),rot=acc/total*360-90;
+    const arc=_ce("circle",{cx:cx,cy:cy,r:r,fill:"none",stroke:s.color,"stroke-width":sw,"stroke-dasharray":c,"stroke-dashoffset":c,transform:"rotate("+rot+" "+cx+" "+cy+")",class:"chart-hoverable c-ring"});
+    arc.style.setProperty("--off",off);
+    arc.addEventListener("mousemove",e=>{_ctShow(e,"<b>"+s.label+"</b><br>"+s.value+" รายการ · "+Math.round(frac*100)+"%");svg.querySelectorAll(".chart-hoverable").forEach(a=>a.classList.add("chart-dimmed"));arc.classList.remove("chart-dimmed");});
+    arc.addEventListener("mouseleave",()=>{_ctHide();svg.querySelectorAll(".chart-hoverable").forEach(a=>a.classList.remove("chart-dimmed"));});
+    svg.appendChild(arc);
+    if(frac>=0.08){const mid=(acc+s.value/2)/total*2*Math.PI-Math.PI/2,lx=cx+Math.cos(mid)*r,ly=cy+Math.sin(mid)*r;
+      svg.appendChild(_ce("text",{x:lx,y:ly+3,"text-anchor":"middle",class:"c-fade",fill:"#fff",style:"font-size:11px;font-weight:700;font-family:Archivo"},Math.round(frac*100)+"%"));}
+    acc+=s.value;
+  });
+  svg.appendChild(_ce("text",{x:cx,y:cy-1,"text-anchor":"middle","font-family":"Archivo","font-weight":"700","font-size":size*0.16,fill:CHART_C.navy},avg+"%"));
+  svg.appendChild(_ce("text",{x:cx,y:cy+size*0.095,"text-anchor":"middle","font-size":size*0.052,fill:CHART_C.muted},"คืบหน้ารวม"));
+  mount.appendChild(svg);
+  if(legend){legend.innerHTML="";segs.forEach(s=>{const d=document.createElement("div");d.className="lg";d.innerHTML='<span class="sw dot" style="background:'+s.color+'"></span>'+esc(s.label)+" ("+s.value+")";legend.appendChild(d);});}
+}
+
 // ---- KPIs ----
 const KPI_ICO={
   tasks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
@@ -1495,18 +1647,25 @@ function renderKpis(){
   const onp=t.filter(x=>x.status==="onprocess").length;
   const avg=total?Math.round(t.reduce((s,x)=>s+ +(x.progress||0),0)/total):0;
   const compPct=total?Math.round(comp/total*100):0;
-  const card=(ico,kc,kcbg,val,lbl,sub,subcol,prog)=>`<div class="kpi" style="--kc:${kc};--kc-bg:${kcbg}">
+  const card=(idx,ico,kc,kcbg,val,lbl,sub,subcol)=>`<div class="kpi" style="--kc:${kc};--kc-bg:${kcbg}">
     <div class="k-ico">${ico}</div>
     <div class="k-val">${val}</div>
     <div class="k-lbl">${lbl}</div>
     ${sub!=null?`<div class="k-sub" style="color:${subcol||"var(--muted)"}">${sub}</div>`:""}
-    ${prog!=null?`<div class="k-bar"><span style="width:${prog}%;background:${kc}"></span></div>`:""}
+    <div class="k-spark" data-spark="${idx}"></div>
   </div>`;
   document.getElementById("kpis").innerHTML=
-    card(KPI_ICO.tasks,"#2C7BE5","#EBF2FF",total,"งานทั้งหมด","ทุกรายการในแผนงาน",null,null)+
-    card(KPI_ICO.check,"#10B981","#D1FAE5",comp,"เสร็จสมบูรณ์","↑ คิดเป็น "+compPct+"% ของงาน","#10B981",null)+
-    card(KPI_ICO.clock,"#D97706","#FEF3C7",onp,"กำลังดำเนินการ",onp?"กำลังทำงานอยู่":"ไม่มีงานค้าง","#D97706",null)+
-    card(KPI_ICO.trend,"#2C7BE5","#EBF2FF",avg+"%","ความก้าวหน้ารวม",null,null,avg);
+    card(0,KPI_ICO.tasks,"#2C7BE5","#EBF2FF",total,"งานทั้งหมด","ทุกรายการในแผนงาน",null)+
+    card(1,KPI_ICO.check,"#10B981","#D1FAE5",comp,"เสร็จสมบูรณ์","↑ คิดเป็น "+compPct+"% ของงาน","#10B981")+
+    card(2,KPI_ICO.clock,"#D97706","#FEF3C7",onp,"กำลังดำเนินการ",onp?"กำลังทำงานอยู่":"ไม่มีงานค้าง","#D97706")+
+    card(3,KPI_ICO.trend,"#2C7BE5","#EBF2FF",avg+"%","ความก้าวหน้ารวม",avg>0?"แนวโน้มสะสม":null);
+  // derived sparklines from real task timeline
+  const tl=projectTimeline();
+  if(tl){
+    const series=[tl.started,tl.completed,tl.inproc,tl.progressFull];
+    const cols=["#2C5F8A","#2F7A6B","#A87B2C","#2C5F8A"];
+    document.querySelectorAll("#kpis [data-spark]").forEach(el=>{const i=+el.dataset.spark;buildSparkline(el,series[i],cols[i]);});
+  }
 }
 
 // ---- machines ----
@@ -2293,6 +2452,11 @@ function updateActBadge(){
 function renderCockpit(){
   const wrap=document.getElementById("content");
   const r=readiness();
+  // chart timeline + schedule variance (actual vs planned at today)
+  const tl=projectTimeline();
+  let svTxt="—",svCol="var(--muted)";
+  if(tl){const i=tl.todayIdx,pa=tl.planned[i],ac=(tl.actual[i]!=null?tl.actual[i]:tl.progressFull[i]),diff=ac-pa;
+    svTxt=(diff>0?"+":"")+diff+"%";svCol=diff>=0?"#2F7A6B":(diff>=-5?"#A87B2C":"#A8443A");}
   // countdown target
   const target=state.signoff.date || (state.tasks||[]).reduce((mx,t)=>t.end>mx?t.end:mx,"");
   const dd=daysTo(target);
@@ -2344,6 +2508,22 @@ function renderCockpit(){
         <p>ประเมินจาก 6 ด้านของโครงการ — ครบ 100% = พร้อมเซ็นรับมอบงาน</p>
         <div class="ck-gates">${gatesHtml}</div>
       </div>
+    </div>
+  </div>
+
+  <div class="ck-charts">
+    <div class="chart-card">
+      <div class="cc-h">
+        <div><h3>S-Curve — ความคืบหน้าสะสม</h3><p>เปรียบเทียบแผน (Planned) กับผลจริง (Actual)</p></div>
+        <div class="cc-metric">ส่วนต่าง ณ วันนี้<b style="color:${svCol}">${svTxt}</b></div>
+      </div>
+      <div id="ckScurve"></div>
+      <div class="chart-legend" id="ckScurveLeg"></div>
+    </div>
+    <div class="chart-card">
+      <div class="cc-h"><div><h3>การกระจายสถานะงาน</h3><p>จากทั้งหมด ${(state.tasks||[]).length} รายการ</p></div></div>
+      <div id="ckDonut"></div>
+      <div class="chart-legend" id="ckDonutLeg"></div>
     </div>
   </div>
 
@@ -2406,6 +2586,9 @@ function renderCockpit(){
     <div class="hol-note">* วันหยุดมีผลกับการคำนวณ "วันทำงาน" และจะถูกแรเงาในไทม์ไลน์</div>
   </div>`;
 
+  // build charts (real state)
+  buildSCurve(wrap.querySelector("#ckScurve"),wrap.querySelector("#ckScurveLeg"),tl);
+  buildStatusDonut(wrap.querySelector("#ckDonut"),wrap.querySelector("#ckDonutLeg"));
   wrap.querySelectorAll("[data-go]").forEach(el=>el.addEventListener("click",()=>{view=el.dataset.go;setSeg();renderContent();}));
   // milestones edit
   wrap.querySelectorAll("[data-mf]").forEach(inp=>{const row=inp.closest("[data-mid]");const m=(state.milestones||[]).find(x=>x.id===row.dataset.mid);
