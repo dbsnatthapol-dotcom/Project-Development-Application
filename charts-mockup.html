@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PRIME — Interactive Charts Mockup (Minimal Pro)</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B1929;--accent:#2C7BE5;--green:#10B981;--amber:#D97706;--red:#EF4444;--purple:#7C3AED;
+  --ink:#0F172A;--muted:#64748B;--line:#E2E8F0;--bg:#F1F5F9;--card:#FFF;--soft:#F8FAFC;
+  --r:14px;--sh:0 1px 3px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04);--sh2:0 8px 24px rgba(15,23,42,.09);
+  --mono:'IBM Plex Mono',monospace;
+}
+body{font-family:'Inter','Sarabun',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;padding:24px;line-height:1.4}
+.wrap{max-width:1180px;margin:0 auto}
+.page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.page-head h1{font-family:'Archivo',sans-serif;font-size:22px;font-weight:800;color:var(--navy)}
+.page-head .tag{font-size:11px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-weight:600}
+.sub{color:var(--muted);font-size:13px;margin-bottom:22px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:26px 0 12px;display:flex;align-items:center;gap:8px}
+.section-label::before{content:"";width:14px;height:2px;background:var(--accent);border-radius:2px}
+.grid{display:grid;gap:16px}
+.g-2{grid-template-columns:1.4fr 1fr}
+.g-2e{grid-template-columns:1fr 1fr}
+.g-4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;transition:box-shadow .2s}
+.card:hover{box-shadow:var(--sh2)}
+.card-h{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.card-h h3{font-size:14px;font-weight:700;color:var(--ink)}
+.card-h p{font-size:11px;color:var(--muted);margin-top:2px}
+.chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:7px}
+.chip.up{color:#065F46;background:#D1FAE5}.chip.warn{color:#92400E;background:#FEF3C7}.chip.down{color:#991B1B;background:#FEE2E2}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
+.lg{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);font-weight:500;cursor:pointer;user-select:none;transition:opacity .15s}
+.lg .sw{width:11px;height:11px;border-radius:3px}
+.lg.off{opacity:.32}
+.kpi{position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--kc)}
+.kpi .kv{font-family:'Archivo',sans-serif;font-weight:800;font-size:26px;color:var(--ink);line-height:1}
+.kpi .kl{font-size:12px;color:var(--muted);margin-top:3px;font-weight:500}
+.kpi .kd{font-size:11px;font-weight:700;margin-top:5px}
+svg .grid-line{stroke:var(--line);stroke-width:1}
+svg text{font-family:'Inter','Sarabun',sans-serif}
+.axis-lbl{fill:var(--muted);font-size:10px}
+/* draw-in */
+.draw-line{stroke-dasharray:1400;stroke-dashoffset:1400;animation:draw 1.3s cubic-bezier(.22,.68,0,1) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.grow-y{transform:scaleY(0);transform-origin:bottom;animation:growY .8s cubic-bezier(.22,.68,0,1.05) forwards}
+@keyframes growY{to{transform:scaleY(1)}}
+.ring-anim{stroke-dasharray:var(--c);stroke-dashoffset:var(--c);animation:ring 1.1s cubic-bezier(.22,.68,0,1) forwards}
+@keyframes ring{to{stroke-dashoffset:var(--off)}}
+.fade-pt{opacity:0;animation:fadept .5s ease forwards;animation-delay:1s}
+@keyframes fadept{to{opacity:1}}
+/* tooltip */
+#tip{position:fixed;pointer-events:none;background:var(--navy);color:#fff;font-size:11.5px;font-weight:500;padding:7px 11px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.25);opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s;z-index:999;white-space:nowrap;line-height:1.5}
+#tip.show{opacity:1;transform:translateY(0)}
+#tip b{font-weight:700}
+.hoverable{cursor:pointer;transition:opacity .12s}
+.dimmed{opacity:.35}
+.bar-rect{transition:opacity .12s}
+.foot{margin-top:30px;padding:16px;border-radius:12px;background:#fff;border:1px solid var(--line);font-size:12.5px;color:var(--muted);line-height:1.7}
+.foot b{color:var(--ink)}
+.rings-row{display:flex;justify-content:space-around;align-items:center;flex-wrap:wrap;gap:8px}
+.ring-cell{text-align:center}
+.ring-cell .rc-code{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);margin-top:4px}
+.ring-cell .rc-st{font-size:10px;color:var(--muted)}
+@media(max-width:900px){.g-2,.g-2e{grid-template-columns:1fr}.g-4{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div id="tip"></div>
+<div class="wrap">
+  <div class="page-head">
+    <h1>📊 Interactive Charts — Minimal Pro</h1>
+    <span class="tag">charts-mockup.html · ตัวอย่าง ยังไม่ลง index.html</span>
+  </div>
+  <div class="sub">กราฟ SVG เขียนเอง (ออฟไลน์ได้ · ไม่มี CDN) · เลื่อนเมาส์ชี้กราฟเพื่อดูตัวเลข · คลิก legend เพื่อเปิด/ปิดเส้น · ข้อมูลจริงจากโปรเจกต์ UAM3</div>
+
+  <!-- KPI + sparkline -->
+  <div class="section-label">Cockpit — KPI พร้อม sparkline</div>
+  <div class="grid g-4" id="kpiRow"></div>
+
+  <!-- S-Curve + Status donut -->
+  <div class="section-label">Cockpit — S-Curve (แผน vs จริง) &amp; สัดส่วนสถานะงาน</div>
+  <div class="grid g-2">
+    <div class="card">
+      <div class="card-h">
+        <div><h3>S-Curve ความคืบหน้าสะสม</h3><p>เทียบแผน (Planned) กับจริง (Actual) — เส้นจริงต่ำกว่าแผน = ช้ากว่ากำหนด</p></div>
+        <span class="chip warn">ช้ากว่าแผน 4%</span>
+      </div>
+      <div id="scurve"></div>
+      <div class="legend" id="scurveLeg"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div><h3>สถานะงาน 28 รายการ</h3><p>คลิกชิ้นเพื่อ (สาธิต) กระโดดไปกรอง</p></div></div>
+      <div id="statusDonut"></div>
+    </div>
+  </div>
+
+  <!-- Budget grouped bar + Issues -->
+  <div class="section-label">Budget &amp; Issues</div>
+  <div class="grid g-2e">
+    <div class="card">
+      <div class="card-h"><div><h3>งบประมาณ vs ใช้จริง (รายหมวด)</h3><p>แท่งแดง = ใช้เกินงบ</p></div><span class="chip up">รวมใช้ 97%</span></div>
+      <div id="budgetBar"></div>
+      <div class="legend" id="budgetLeg"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div><h3>ปัญหา — แนวโน้มเปิด vs ปิด</h3><p>เส้นเปิดพุ่ง = ปัญหาสะสม</p></div></div>
+      <div id="issueTrend"></div>
+      <div class="legend" id="issueLeg"></div>
+    </div>
+  </div>
+
+  <!-- Sign-off rings + Risk bubble -->
+  <div class="section-label">Sign-off &amp; Risk</div>
+  <div class="grid g-2e">
+    <div class="card">
+      <div class="card-h"><div><h3>ความพร้อมตรวจรับ — ต่อเครื่อง</h3><p>วงแหวนแสดง % ความพร้อมแต่ละเครื่อง</p></div></div>
+      <div class="rings-row" id="signoffRings"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div><h3>Risk Bubble (โอกาส × ผลกระทบ)</h3><p>ขนาดฟอง = จำนวนความเสี่ยง · มุมขวาบน = อันตรายสุด</p></div></div>
+      <div id="riskBubble"></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>ทำไมแบบนี้เหมาะกับ PRIME:</b> กราฟทั้งหมดเป็น <b>SVG เขียนเอง</b> — ทำงานออฟไลน์ 100%, ไม่ต้องโหลด library จาก internet,
+    พิมพ์ออก A4 คมชัด (vector), เพิ่มขนาดไฟล์แค่ ~15-20KB. สไตล์ Minimal มืออาชีพ: เส้นบาง, สี palette เดียวกับแอป, เน้นอ่านตัวเลขง่าย.
+    <br>หากอนุมัติ ผมจะนำชุดนี้ไปวางใน index.html จริง (ผูกกับ state จริง + fallback เมื่อไม่มีข้อมูล + ผ่าน QA/Debug ทุกครั้ง).
+  </div>
+</div>
+
+<script>
+/* ============ helpers ============ */
+var TIP=document.getElementById('tip');
+function tipShow(e,html){TIP.innerHTML=html;TIP.classList.add('show');tipMove(e);}
+function tipMove(e){var x=e.clientX+14,y=e.clientY+14;if(x>window.innerWidth-180)x=e.clientX-170;TIP.style.left=x+'px';TIP.style.top=y+'px';}
+function tipHide(){TIP.classList.remove('show');}
+function el(tag,attrs,html){var e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(html!=null)e.innerHTML=html;return e;}
+function fmtMoney(n){return (Number(n)||0).toLocaleString('en-US');}
+var C={navy:'#0B1929',blue:'#2C7BE5',green:'#10B981',amber:'#D97706',red:'#EF4444',purple:'#7C3AED',muted:'#94A3B8',line:'#E2E8F0'};
+
+/* ============ KPI + sparkline ============ */
+(function(){
+  var data=[
+    {kc:C.blue, v:'28', l:'งานทั้งหมด', d:'', dc:C.muted, spark:[3,6,9,12,16,20,24,28], col:C.blue},
+    {kc:C.green,v:'19', l:'เสร็จสมบูรณ์', d:'↑ 68%', dc:C.green, spark:[1,3,5,8,11,14,17,19], col:C.green},
+    {kc:C.amber,v:'6',  l:'กำลังดำเนินการ', d:'กำลังทำ', dc:C.amber, spark:[2,4,5,7,8,7,6,6], col:C.amber},
+    {kc:C.blue, v:'72%',l:'ความก้าวหน้ารวม', d:'↑ +12%', dc:C.green, spark:[10,22,33,45,55,63,68,72], col:C.blue}
+  ];
+  function spark(vals,col){
+    var w=120,h=30,mx=Math.max.apply(null,vals),mn=Math.min.apply(null,vals);
+    var pts=vals.map(function(v,i){var x=i/(vals.length-1)*w;var y=h-((v-mn)/((mx-mn)||1))*(h-4)-2;return [x,y];});
+    var d='M'+pts.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' L ');
+    var area='M0 '+h+' L '+pts.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' L ')+' L '+w+' '+h+' Z';
+    var id='sg'+Math.random().toString(36).slice(2,7);
+    var svg=el('svg',{viewBox:'0 0 '+w+' '+h,width:w,height:h,style:'overflow:visible'});
+    var defs=el('defs',{});defs.appendChild(el('linearGradient',{id:id,x1:'0',y1:'0',x2:'0',y2:'1'},'<stop offset="0" stop-color="'+col+'" stop-opacity=".22"/><stop offset="1" stop-color="'+col+'" stop-opacity="0"/>'));svg.appendChild(defs);
+    svg.appendChild(el('path',{d:area,fill:'url(#'+id+')'}));
+    svg.appendChild(el('path',{d:d,fill:'none',stroke:col,'stroke-width':2,'stroke-linecap':'round','stroke-linejoin':'round',class:'draw-line'}));
+    svg.appendChild(el('circle',{cx:pts[pts.length-1][0],cy:pts[pts.length-1][1],r:3,fill:col,class:'fade-pt'}));
+    return svg;
+  }
+  var row=document.getElementById('kpiRow');
+  data.forEach(function(k){
+    var c=document.createElement('div');c.className='card kpi';c.style.setProperty('--kc',k.kc);
+    c.innerHTML='<div class="kv">'+k.v+'</div><div class="kl">'+k.l+'</div>'+(k.d?'<div class="kd" style="color:'+k.dc+'">'+k.d+'</div>':'<div class="kd">&nbsp;</div>');
+    var sp=document.createElement('div');sp.style.marginTop='8px';sp.appendChild(spark(k.spark,k.col));
+    c.appendChild(sp);row.appendChild(c);
+  });
+})();
+
+/* ============ S-Curve ============ */
+(function(){
+  var W=560,H=240,pl=38,pr=16,pt=14,pb=28,iw=W-pl-pr,ih=H-pt-pb;
+  var labels=['19','20','21','22','23','24','25','26','27','28','29','30'];
+  var planned=[5,12,20,30,42,53,64,74,83,90,96,100];
+  var actual =[5,11,18,26,38,50,62,70,78,null,null,null]; // up to 'today' (28)
+  var todayIdx=8;
+  var x=function(i){return pl+i/(labels.length-1)*iw;};
+  var y=function(v){return pt+(1-v/100)*ih;};
+  var svg=el('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',style:'overflow:visible'});
+  // gridlines
+  [0,25,50,75,100].forEach(function(g){
+    svg.appendChild(el('line',{x1:pl,y1:y(g),x2:W-pr,y2:y(g),class:'grid-line','stroke-dasharray':g===0?'0':'3 3'}));
+    svg.appendChild(el('text',{x:pl-8,y:y(g)+3,'text-anchor':'end',class:'axis-lbl'},g+'%'));
+  });
+  labels.forEach(function(l,i){ if(i%2===0) svg.appendChild(el('text',{x:x(i),y:H-8,'text-anchor':'middle',class:'axis-lbl'},l+' มิ.ย.')); });
+  // today marker
+  svg.appendChild(el('line',{x1:x(todayIdx),y1:pt,x2:x(todayIdx),y2:pt+ih,stroke:C.muted,'stroke-width':1,'stroke-dasharray':'4 4'}));
+  svg.appendChild(el('text',{x:x(todayIdx),y:pt-2,'text-anchor':'middle',class:'axis-lbl',fill:C.navy,style:'font-weight:700'},'วันนี้'));
+  function line(vals,col,cls,fill){
+    var pts=[];vals.forEach(function(v,i){if(v!=null)pts.push([x(i),y(v)]);});
+    var d='M'+pts.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' L ');
+    if(fill){var a=d+' L '+pts[pts.length-1][0].toFixed(1)+' '+y(0)+' L '+pts[0][0].toFixed(1)+' '+y(0)+' Z';
+      svg.appendChild(el('path',{d:a,fill:col,'fill-opacity':.07}));}
+    var g=el('g',{'data-series':cls});
+    g.appendChild(el('path',{d:d,fill:'none',stroke:col,'stroke-width':2.5,'stroke-linecap':'round','stroke-linejoin':'round',class:'draw-line'}));
+    vals.forEach(function(v,i){if(v==null)return;
+      var dot=el('circle',{cx:x(i),cy:y(v),r:3.5,fill:'#fff',stroke:col,'stroke-width':2,class:'hoverable fade-pt'});
+      dot.addEventListener('mousemove',function(e){tipShow(e,'<b>'+labels[i]+' มิ.ย.</b><br>'+cls+': <b>'+v+'%</b>');});
+      dot.addEventListener('mouseleave',tipHide);
+      g.appendChild(dot);
+    });
+    svg.appendChild(g);return g;
+  }
+  var gP=line(planned,C.blue,'แผน',true);
+  var gA=line(actual,C.green,'จริง',true);
+  document.getElementById('scurve').appendChild(svg);
+  // legend toggle
+  var leg=document.getElementById('scurveLeg');
+  [['แผน (Planned)',C.blue,gP],['จริง (Actual)',C.green,gA]].forEach(function(it){
+    var d=document.createElement('div');d.className='lg';d.innerHTML='<span class="sw" style="background:'+it[1]+'"></span>'+it[0];
+    d.onclick=function(){d.classList.toggle('off');it[2].style.display=d.classList.contains('off')?'none':'';};
+    leg.appendChild(d);
+  });
+})();
+
+/* ============ Donut (status) ============ */
+function donut(mount,segs,centerTop,centerSub,size){
+  size=size||220;var cx=size/2,cy=size/2,r=size*0.34,sw=size*0.13,c=2*Math.PI*r;
+  var total=segs.reduce(function(s,x){return s+x.value;},0);
+  var svg=el('svg',{viewBox:'0 0 '+size+' '+size,width:'100%',style:'max-width:'+size+'px;display:block;margin:0 auto;overflow:visible'});
+  svg.appendChild(el('circle',{cx:cx,cy:cy,r:r,fill:'none',stroke:'#EEF2F7','stroke-width':sw}));
+  var acc=0;
+  segs.forEach(function(s){
+    if(!s.value)return;
+    var frac=s.value/total,off=c*(1-frac),rot=acc/total*360-90;
+    var arc=el('circle',{cx:cx,cy:cy,r:r,fill:'none',stroke:s.color,'stroke-width':sw,'stroke-linecap':'round',
+      'stroke-dasharray':c,transform:'rotate('+rot+' '+cx+' '+cy+')',class:'hoverable ring-anim'});
+    arc.style.setProperty('--c',c);arc.style.setProperty('--off',off);
+    arc.addEventListener('mousemove',function(e){tipShow(e,'<b>'+s.label+'</b><br>'+s.value+' งาน · '+Math.round(frac*100)+'%');
+      svg.querySelectorAll('.hoverable').forEach(function(a){a.classList.add('dimmed');});arc.classList.remove('dimmed');});
+    arc.addEventListener('mouseleave',function(){tipHide();svg.querySelectorAll('.hoverable').forEach(function(a){a.classList.remove('dimmed');});});
+    svg.appendChild(arc);acc+=s.value;
+  });
+  svg.appendChild(el('text',{x:cx,y:cy-2,'text-anchor':'middle','font-family':'Archivo','font-weight':'800','font-size':size*0.17,fill:C.navy},centerTop));
+  svg.appendChild(el('text',{x:cx,y:cy+size*0.10,'text-anchor':'middle','font-size':size*0.055,fill:C.muted},centerSub));
+  mount.appendChild(svg);
+  // legend
+  var lg=document.createElement('div');lg.className='legend';lg.style.justifyContent='center';
+  segs.forEach(function(s){var d=document.createElement('div');d.className='lg';d.innerHTML='<span class="sw" style="background:'+s.color+'"></span>'+s.label+' ('+s.value+')';lg.appendChild(d);});
+  mount.appendChild(lg);
+}
+donut(document.getElementById('statusDonut'),[
+  {label:'เสร็จสมบูรณ์',value:19,color:C.green},
+  {label:'กำลังดำเนินการ',value:6,color:C.amber},
+  {label:'วางแผน',value:3,color:C.blue}
+],'72%','คืบหน้ารวม');
+
+/* ============ Budget grouped bar ============ */
+(function(){
+  var data=[
+    {cat:'เครื่องทดสอบ',p:12000000,a:12000000},
+    {cat:'ติดตั้ง/ฐานราก',p:800000,a:750000},
+    {cat:'ขนส่ง/นำเข้า',p:600000,a:640000},
+    {cat:'อบรม',p:400000,a:250000},
+    {cat:'สำรอง',p:300000,a:0}
+  ];
+  var W=560,H=240,pl=44,pr=10,pt=12,pb=40,iw=W-pl-pr,ih=H-pt-pb;
+  var mx=Math.max.apply(null,data.map(function(d){return Math.max(d.p,d.a);}));
+  var y=function(v){return pt+(1-v/mx)*ih;};
+  var bw=iw/data.length, pad=bw*0.18, half=(bw-pad*2)/2;
+  var svg=el('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',style:'overflow:visible'});
+  [0,.25,.5,.75,1].forEach(function(f){var v=mx*f;
+    svg.appendChild(el('line',{x1:pl,y1:y(v),x2:W-pr,y2:y(v),class:'grid-line','stroke-dasharray':f===0?'0':'3 3'}));
+    svg.appendChild(el('text',{x:pl-6,y:y(v)+3,'text-anchor':'end',class:'axis-lbl'},(v/1e6).toFixed(v>=1e6?0:1)+'M'));
+  });
+  data.forEach(function(d,i){
+    var x0=pl+i*bw+pad, over=d.a>d.p;
+    [['p',d.p,C.blue,x0],['a',d.a,over?C.red:C.green,x0+half]].forEach(function(b){
+      var h=ih*(b[1]/mx);
+      var rect=el('rect',{x:b[3],y:y(b[1]),width:half-2,height:Math.max(0,h),rx:3,fill:b[2],class:'bar-rect grow-y',style:'animation-delay:'+(i*0.08)+'s'});
+      rect.addEventListener('mousemove',function(e){tipShow(e,'<b>'+d.cat+'</b><br>'+(b[0]==='p'?'งบประมาณ':'ใช้จริง')+': <b>'+fmtMoney(b[1])+'</b>'+(over&&b[0]==='a'?' ⚠ เกินงบ':''));});
+      rect.addEventListener('mouseleave',tipHide);
+      svg.appendChild(rect);
+    });
+    svg.appendChild(el('text',{x:x0+half,y:H-22,'text-anchor':'middle',class:'axis-lbl',style:'font-size:9.5px'},d.cat));
+  });
+  document.getElementById('budgetBar').appendChild(svg);
+  var leg=document.getElementById('budgetLeg');
+  [['งบประมาณ',C.blue],['ใช้จริง',C.green],['ใช้เกินงบ',C.red]].forEach(function(it){
+    var d=document.createElement('div');d.className='lg';d.innerHTML='<span class="sw" style="background:'+it[1]+'"></span>'+it[0];leg.appendChild(d);
+  });
+})();
+
+/* ============ Issues trend (line) ============ */
+(function(){
+  var W=560,H=240,pl=30,pr=14,pt=14,pb=28,iw=W-pl-pr,ih=H-pt-pb;
+  var labels=['20','22','24','26','27','28'];
+  var opened=[1,1,1,2,3,3];
+  var closed=[0,0,0,1,1,1];
+  var mx=4;
+  var x=function(i){return pl+i/(labels.length-1)*iw;};
+  var y=function(v){return pt+(1-v/mx)*ih;};
+  var svg=el('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',style:'overflow:visible'});
+  for(var g=0;g<=mx;g++){svg.appendChild(el('line',{x1:pl,y1:y(g),x2:W-pr,y2:y(g),class:'grid-line','stroke-dasharray':g===0?'0':'3 3'}));
+    svg.appendChild(el('text',{x:pl-6,y:y(g)+3,'text-anchor':'end',class:'axis-lbl'},g));}
+  labels.forEach(function(l,i){svg.appendChild(el('text',{x:x(i),y:H-8,'text-anchor':'middle',class:'axis-lbl'},l+' มิ.ย.'));});
+  function ln(vals,col,name){
+    var pts=vals.map(function(v,i){return [x(i),y(v)];});
+    var d='M'+pts.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' L ');
+    var grp=el('g',{});
+    grp.appendChild(el('path',{d:d,fill:'none',stroke:col,'stroke-width':2.5,'stroke-linecap':'round','stroke-linejoin':'round',class:'draw-line'}));
+    pts.forEach(function(p,i){var dot=el('circle',{cx:p[0],cy:p[1],r:3.5,fill:'#fff',stroke:col,'stroke-width':2,class:'hoverable fade-pt'});
+      dot.addEventListener('mousemove',function(e){tipShow(e,'<b>'+labels[i]+' มิ.ย.</b><br>'+name+': <b>'+vals[i]+'</b>');});
+      dot.addEventListener('mouseleave',tipHide);grp.appendChild(dot);});
+    svg.appendChild(grp);return grp;
+  }
+  var gO=ln(opened,C.red,'เปิดสะสม');
+  var gC=ln(closed,C.green,'ปิดสะสม');
+  document.getElementById('issueTrend').appendChild(svg);
+  var leg=document.getElementById('issueLeg');
+  [['เปิด (สะสม)',C.red,gO],['ปิด (สะสม)',C.green,gC]].forEach(function(it){
+    var d=document.createElement('div');d.className='lg';d.innerHTML='<span class="sw" style="background:'+it[1]+'"></span>'+it[0];
+    d.onclick=function(){d.classList.toggle('off');it[2].style.display=d.classList.contains('off')?'none':'';};leg.appendChild(d);});
+})();
+
+/* ============ Sign-off progress rings ============ */
+(function(){
+  var machines=[
+    {code:'HZPJ10(II)',pct:100,st:'พร้อม',col:C.green},
+    {code:'HZPQ800',pct:75,st:'กำลังทำ',col:C.amber},
+    {code:'HZPN3000',pct:20,st:'เริ่มแล้ว',col:C.amber},
+    {code:'HZJ700',pct:0,st:'รอ',col:C.blue}
+  ];
+  var mount=document.getElementById('signoffRings');
+  machines.forEach(function(m){
+    var size=104,cx=size/2,cy=size/2,r=size*0.38,sw=9,c=2*Math.PI*r,off=c*(1-m.pct/100);
+    var cell=document.createElement('div');cell.className='ring-cell';
+    var svg=el('svg',{viewBox:'0 0 '+size+' '+size,width:size,height:size,style:'overflow:visible'});
+    svg.appendChild(el('circle',{cx:cx,cy:cy,r:r,fill:'none',stroke:'#EEF2F7','stroke-width':sw}));
+    var arc=el('circle',{cx:cx,cy:cy,r:r,fill:'none',stroke:m.col,'stroke-width':sw,'stroke-linecap':'round',
+      'stroke-dasharray':c,transform:'rotate(-90 '+cx+' '+cy+')',class:'ring-anim'});
+    arc.style.setProperty('--c',c);arc.style.setProperty('--off',off);
+    svg.appendChild(arc);
+    svg.appendChild(el('text',{x:cx,y:cy+5,'text-anchor':'middle','font-family':'Archivo','font-weight':'800','font-size':'21',fill:C.navy},m.pct+'%'));
+    cell.appendChild(svg);
+    cell.insertAdjacentHTML('beforeend','<div class="rc-code">'+m.code+'</div><div class="rc-st" style="color:'+m.col+'">'+m.st+'</div>');
+    mount.appendChild(cell);
+  });
+})();
+
+/* ============ Risk bubble ============ */
+(function(){
+  var W=520,H=240,pl=70,pr=20,pt=16,pb=42,iw=W-pl-pr,ih=H-pt-pb;
+  var lv={low:0,med:1,high:2},lab=['ต่ำ','กลาง','สูง'];
+  // risks: likelihood(x) x impact(y), aggregated
+  var risks=[
+    {l:'med',i:'high',n:1,t:'ฐานรากไม่ระนาบ'},
+    {l:'med',i:'med',n:1,t:'เอกสารไม่ครบ'},
+    {l:'low',i:'med',n:1,t:'อบรมไม่ครบกะ'},
+    {l:'high',i:'high',n:1,t:'ไฮดรอลิก HZPN3000'}
+  ];
+  var x=function(v){return pl+(lv[v]/2)*iw;};
+  var y=function(v){return pt+(1-lv[v]/2)*ih;};
+  function zone(l,i){var s=lv[l]+lv[i];return s>=3?C.red:(s>=2?C.amber:C.green);}
+  var svg=el('svg',{viewBox:'0 0 '+W+' '+H,width:'100%',style:'overflow:visible'});
+  // background zones grid 3x3
+  for(var xi=0;xi<3;xi++)for(var yi=0;yi<3;yi++){
+    var col=(xi+yi>=3?C.red:(xi+yi>=2?C.amber:C.green));
+    svg.appendChild(el('rect',{x:pl+xi/3*iw,y:pt+(2-yi)/3*ih,width:iw/3,height:ih/3,fill:col,'fill-opacity':.08,stroke:'#fff','stroke-width':2}));
+  }
+  lab.forEach(function(t,i){
+    svg.appendChild(el('text',{x:x(['low','med','high'][i]),y:H-20,'text-anchor':'middle',class:'axis-lbl'},t));
+    svg.appendChild(el('text',{x:pl-12,y:y(['low','med','high'][i])+3,'text-anchor':'end',class:'axis-lbl'},t));
+  });
+  svg.appendChild(el('text',{x:pl+iw/2,y:H-4,'text-anchor':'middle',class:'axis-lbl',style:'font-weight:700'},'โอกาสเกิด →'));
+  svg.appendChild(el('text',{x:16,y:pt+ih/2,'text-anchor':'middle',class:'axis-lbl',style:'font-weight:700',transform:'rotate(-90 16 '+(pt+ih/2)+')'},'ผลกระทบ →'));
+  risks.forEach(function(rk){
+    var col=zone(rk.l,rk.i),cx=x(rk.l),cy=y(rk.i),r=12+rk.n*5;
+    var b=el('circle',{cx:cx,cy:cy,r:r,fill:col,'fill-opacity':.85,stroke:'#fff','stroke-width':2,class:'hoverable',style:'transform-origin:'+cx+'px '+cy+'px;animation:growY .7s cubic-bezier(.22,.68,0,1.3) forwards'});
+    b.addEventListener('mousemove',function(e){tipShow(e,'<b>'+rk.t+'</b><br>โอกาส: '+lab[lv[rk.l]]+' · ผลกระทบ: '+lab[lv[rk.i]]);});
+    b.addEventListener('mouseleave',tipHide);
+    svg.appendChild(b);
+  });
+  document.getElementById('riskBubble').appendChild(svg);
+})();
+
+window.addEventListener('scroll',function(){if(TIP.classList.contains('show'))tipHide();});
+</script>
+</body>
+</html>
